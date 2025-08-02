@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance de Vendas por Loja</title>
+    <!-- Inclui o Tailwind CSS para estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link para o arquivo CSS personalizado -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-6 sm:p-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">
+            Desempenho Rede Mi Place
+        </h1>
+        <p class="text-gray-600 text-center mb-8">
+            Análise da quantidade de vendas de aparelhos por loja ao longo dos meses.
+        </p>
+
+        <!-- Indicador de carregamento -->
+        <div id="loadingIndicator" class="flex justify-center items-center h-64">
+            <div class="loader"></div>
+            <p class="ml-4 text-gray-700">Carregando dados do gráfico...</p>
+        </div>
+
+        <!-- Contêiner do gráfico (inicialmente oculto) -->
+        <div id="chartContainer" class="chart-container hidden">
+            <canvas id="salesChart"></canvas>
+        </div>
+
+        <!-- Mensagem de erro (inicialmente oculta) -->
+        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8" role="alert">
+            <strong class="font-bold">Erro:</strong>
+            <span class="block sm:inline" id="errorText">Não foi possível carregar os dados do gráfico.</span>
+        </div>
+    </div>
+
+    <!-- Inclui a biblioteca Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- Link para o arquivo JavaScript personalizado -->
+    <script src="script.js"></script>
+</body>
+</html>
