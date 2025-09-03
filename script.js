@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 2025-05-01,42,48,136,59,55,
 2025-06-01,72,83,175,87,85,
 2025-07-01,65,77,137,54,66,
-2025-08-01,65,49,117,68,65, `; 
+2025-08-01,65,49,117,68,65,
+2025-09-01,67,47,110,52,67, `; 
 // Nova linha de dados para Julho de 2025
 
         // Função para parsear o CSV
@@ -106,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Quantidade de Vendas por Loja (Jun/24 - Jul/25)', // Título atualizado para incluir Julho
+                        text: 'Quantidade de Vendas por Loja (Jun/24 - Ago/25)', // Título atualizado para incluir Julho
                         font: {
                             size: 20,
                             weight: 'bold'
