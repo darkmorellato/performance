@@ -6,17 +6,64 @@
     <title>Performance de Vendas por Loja</title>
     <!-- Inclui o Tailwind CSS para estilização -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Link para o arquivo CSS personalizado -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Inclui a biblioteca Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <!-- Inclui o plugin Datalabels para mostrar os valores sobre os pontos -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    
+    <!-- CSS UNIFICADO -->
+    <style>
+        /* Define a fonte Inter como padrão */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #c7c9ce; /* Cor de fundo suave */
+        }
+        /* Contêiner do gráfico para controlar altura e largura */
+        .chart-container {
+            position: relative;
+            height: 550px; /* Altura aumentada para melhor visualização */
+            width: 100%; /* Largura total */
+        }
+        /* Estilo para o spinner de carregamento */
+        .loader {
+            border: 4px solid #f0ecec; /* Cinza claro */
+            /* Mantendo o roxo suave para o spinner (neutro) */
+            border-top: 4px solid #7E57C2; 
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        /* Animação de rotação para o spinner */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body class="p-4 sm:p-8">
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl p-6 sm:p-8">
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-8">
         <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">
             Desempenho Rede Mi Place
         </h1>
         <p class="text-gray-600 text-center mb-8">
             Análise da quantidade de vendas de aparelhos por loja ao longo dos meses.
         </p>
+
+        <!-- Área de Métricas de Resumo (Summary Cards) -->
+        <!-- Layout ajustado para 2 colunas -->
+        <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <!-- Card 1: Total de Vendas (Tons de Cinza/Slate) -->
+            <div class="bg-gray-50 border-l-4 border-gray-600 rounded-lg p-4 shadow-md">
+                <p class="text-sm font-medium text-gray-500">Total de Vendas</p>
+                <p id="totalSales" class="text-2xl font-bold text-gray-900 mt-1">...</p>
+            </div>
+            <!-- Card 2: Média Mensal (Mantendo o Verde) -->
+            <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-md">
+                <p class="text-sm font-medium text-gray-500">Média Mensal</p>
+                <p id="averageSales" class="text-2xl font-bold text-gray-900 mt-1">...</p>
+            </div>
+        </div>
 
         <!-- Indicador de carregamento -->
         <div id="loadingIndicator" class="flex justify-center items-center h-64">
@@ -36,9 +83,341 @@
         </div>
     </div>
 
-    <!-- Inclui a biblioteca Chart.js para gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <!-- Link para o arquivo JavaScript personalizado -->
-    <script src="script.js"></script>
+    <!-- JAVASCRIPT UNIFICADO -->
+    <script>
+        // Variáveis globais para gerenciamento de dados e gráfico
+        let salesChartInstance = null;
+        let allValidData = []; 
+        let chartLabels = [];
+
+        // Define o plugin Customizado para Linhas de Meta
+        const targetLinesPlugin = {
+            id: 'targetLines',
+            beforeDraw: (chart) => {
+                const { ctx, chartArea: { top, bottom, left, right }, scales: { y } } = chart;
+                const targetLines = chart.options.plugins.targetLines?.lines || [];
+
+                if (targetLines.length === 0) return;
+
+                ctx.save();
+
+                targetLines.forEach(line => {
+                    const yPosition = y.getPixelForValue(line.value);
+
+                    // Desenha a linha
+                    ctx.strokeStyle = line.color || 'gray';
+                    ctx.lineWidth = line.width || 2;
+                    ctx.setLineDash(line.dash || [6, 6]); // Linha tracejada
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(left, yPosition);
+                    ctx.lineTo(right, yPosition);
+                    ctx.stroke();
+
+                    // Desenha o rótulo (texto)
+                    ctx.fillStyle = line.color || 'gray';
+                    ctx.font = '10px Inter, sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
+                    // Adiciona um fundo para o texto para melhorar a visibilidade sobre as linhas de grade
+                    ctx.clearRect(left + 3, yPosition - 12, ctx.measureText(line.label).width + 4, 12);
+                    ctx.fillText(line.label || `Meta: ${line.value}`, left + 5, yPosition - 2);
+                });
+
+                ctx.restore();
+            }
+        };
+
+        // Registra o plugin Datalabels e o plugin customizado
+        if (typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+        } else {
+            console.warn("Plugin ChartDataLabels não carregado. Rótulos de dados não serão exibidos.");
+        }
+        Chart.register(targetLinesPlugin); // Registro do plugin de Linhas de Meta
+
+
+        // Configuração para lojas e cores consistentes 
+        const STORE_CONFIG = {
+            // KASSOUF -> Laranja
+            'MI PLACE KASSOUF': { color: 'rgba(255, 140, 0, 1)', borderColor: 'rgba(255, 100, 0, 1)' }, 
+            // XV -> Preto
+            'MI PLACE XV': { color: 'rgba(0, 0, 0, 1)', borderColor: 'rgba(0, 0, 0, 1)' },
+            // DOM PEDRO -> Azul
+            'MI PLACE DOM PEDRO': { color: 'rgba(30, 144, 255, 1)', borderColor: 'rgba(0, 100, 255, 1)' },
+            // REALME -> Amarelo (Usando uma variação mais forte para visibilidade)
+            'MI PLACE REALME': { color: 'rgba(255, 215, 0, 1)', borderColor: 'rgba(218, 165, 32, 1)' }, 
+            // PREMIUM -> Roxo
+            'MI PLACE PREMIUM': { color: 'rgba(138, 43, 226, 1)', borderColor: 'rgba(99, 0, 255, 1)' }
+        };
+        const allStoreNames = Object.keys(STORE_CONFIG);
+
+        // Função utilitária para formatar a data como "Mês/Ano" (ex: Out/25)
+        const getFormattedDate = (dateStr) => {
+            const date = new Date(dateStr);
+            // Certifica-se de que a data é válida
+            if (isNaN(date.getTime())) return 'Inválido';
+            
+            const month = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+            const year = date.getFullYear().toString().slice(-2);
+            return `${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`;
+        };
+
+        // Função utilitária para formatar números com separadores (ex: 1.234)
+        const formatNumber = (num, decimals = 0) => {
+            if (num === null || isNaN(num)) return 'N/A';
+            return new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals,
+            }).format(num);
+        };
+
+        // Função para calcular e atualizar métricas de resumo
+        const updateSummaryMetrics = (data) => {
+            let totalSales = 0;
+            const numMonths = data.length;
+
+            // Calcula totais
+            data.forEach(row => {
+                allStoreNames.forEach(store => {
+                    const sales = parseFloat(row[store]);
+                    if (!isNaN(sales)) {
+                        totalSales += sales;
+                    }
+                });
+            });
+
+            // Calcula média mensal
+            const averageSales = numMonths > 0 ? totalSales / numMonths : 0;
+            
+            // Atualiza os elementos DOM
+            document.getElementById('totalSales').textContent = formatNumber(totalSales);
+            document.getElementById('averageSales').textContent = formatNumber(averageSales, 1);
+        };
+        
+        // Função para renderizar ou atualizar a instância do Chart.js
+        const renderChart = () => {
+            if (!allValidData.length || !chartLabels.length) {
+                console.error("Dados ou rótulos ausentes para renderização do gráfico.");
+                return;
+            }
+
+            // 1. Define todas as lojas como selecionadas
+            const selectedStores = allStoreNames;
+            
+            // 2. Prepara os datasets (APENAS Vendas Reais)
+            const datasets = [];
+
+            selectedStores.forEach(store => {
+                const config = STORE_CONFIG[store];
+                
+                // Dataset de Vendas Reais (Actual Sales)
+                datasets.push({
+                    label: store,
+                    data: allValidData.map(row => {
+                        const value = parseFloat(row[store]);
+                        return isNaN(value) ? null : value;
+                    }),
+                    borderColor: config.borderColor,
+                    backgroundColor: config.color,
+                    tension: 0.3,
+                    fill: false,
+                    // Aumentando o tamanho do ponto
+                    pointRadius: 8, 
+                    pointHoverRadius: 12, 
+                    // Ponto branco interno com contorno colorido
+                    pointBackgroundColor: '#fff', 
+                    pointBorderColor: config.borderColor, 
+                    pointBorderWidth: 2,
+                    borderWidth: 3,
+                    borderDash: [], // Linha completa (sólida)
+                });
+            });
+            
+            // 3. Cria ou Atualiza o Gráfico
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            const chartTitle = document.getElementById('salesChart').title; 
+
+            if (salesChartInstance) {
+                // Atualiza a instância existente (mais rápido)
+                salesChartInstance.data.datasets = datasets;
+                salesChartInstance.update();
+            } else {
+                // Cria nova instância do gráfico
+                salesChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, 
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: chartTitle, 
+                                font: { size: 20, weight: 'bold' },
+                                color: '#333'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                titleFont: { size: 14 },
+                                bodyFont: { size: 12 },
+                                padding: 10,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        
+                                        // Usa o formatNumber para vendas
+                                        if (context.parsed.y !== null) {
+                                            label += formatNumber(context.parsed.y);
+                                        } else {
+                                            label += 'N/A';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 12 },
+                                    color: '#555',
+                                    usePointStyle: true
+                                }
+                            },
+                            // Configuração para exibir rótulos de dados NOS pontos
+                            datalabels: {
+                                align: 'center', // Alinha o texto no centro do ponto
+                                anchor: 'center', // Âncora no centro do ponto
+                                offset: 0, // Sem deslocamento
+                                color: function(context) {
+                                    // Usa a cor do contorno do ponto (cor da linha) para seguir a cor de cada linha
+                                    return context.dataset.pointBorderColor; 
+                                },
+                                font: {
+                                    weight: 'bold',
+                                    size: 8 // Fonte reduzida para 8 para caber melhor no ponto
+                                },
+                                formatter: function(value, context) {
+                                    // Apenas exibe o valor (quantidade de vendas) se não for nulo
+                                    return value !== null ? formatNumber(value, 0) : ''; 
+                                }
+                            },
+                            // Configuração das Linhas de Meta
+                            targetLines: {
+                                lines: [
+                                    // Linha Meta (135): Verde Escuro
+                                    { value: 135, label: 'Meta (135)', color: 'rgba(22, 101, 52, 0.9)', dash: [8, 4], width: 2 }, 
+                                    // Linha Limite Inferior (65): Verde Claro/Cítrico
+                                    { value: 65, label: 'Meta (65)', color: 'rgba(101, 163, 13, 0.8)', dash: [8, 4], width: 2 } 
+                                ]
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Mês', font: { size: 14, weight: 'bold' }, color: '#333' },
+                                ticks: { color: '#555' },
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                            },
+                            y: {
+                                title: { display: true, text: 'Quantidade de Vendas', font: { size: 14, weight: 'bold' }, color: '#333' },
+                                beginAtZero: true,
+                                ticks: { color: '#555' },
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        // Lógica principal ao carregar o DOM
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const chartContainer = document.getElementById('chartContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+
+            try {
+                // Dados em formato CSV (embutidos no código)
+                const csvData = `MES,MI PLACE KASSOUF,MI PLACE XV,MI PLACE DOM PEDRO,MI PLACE REALME,MI PLACE PREMIUM
+2024-07-01,107,104,,57,
+2024-08-01,113,90,132,57,
+2024-09-01,107,65,155,61,
+2024-10-01,106,63,139,39,
+2024-11-01,98,89,176,47,
+2024-12-01,129,62,242,60,
+2025-01-01,115,68,271,90,23
+2025-02-01,58,66,162,67,53,
+2025-03-01,36,47,115,39,38,
+2025-04-01,58,67,140,81,58,
+2025-05-01,42,48,136,59,55,
+2025-06-01,72,83,175,87,85,
+2025-07-01,65,77,137,54,66,
+2025-08-01,65,49,117,68,65,
+2025-09-01,67,47,110,52,67,
+2025-10-01,46,43,136,74,70,`;
+
+                // Função para analisar o CSV
+                function parseCSV(csv) {
+                    const lines = csv.trim().split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim()); 
+                    const data = [];
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim());
+                        const row = {};
+                        
+                        headers.forEach((header, index) => {
+                            const value = values[index];
+                            row[header] = value === '' || value === undefined ? null : value;
+                        });
+                        data.push(row);
+                    }
+                    return data;
+                }
+
+                const parsedData = parseCSV(csvData);
+
+                // Armazena dados válidos globalmente
+                allValidData = parsedData.filter(row => row.MES); 
+                if (allValidData.length === 0) {
+                    throw new Error("Dados de vendas ausentes ou no formato incorreto.");
+                }
+
+                // Prepara rótulos globalmente
+                chartLabels = allValidData.map(row => getFormattedDate(row.MES));
+                
+                // Define o título dinâmico no elemento canvas
+                const startDate = getFormattedDate(allValidData[0].MES);
+                const endDate = getFormattedDate(allValidData[allValidData.length - 1].MES);
+                document.getElementById('salesChart').title = `Quantidade de Vendas por Loja (${startDate} - ${endDate})`;
+
+                // Atualiza os cartões de resumo (agora apenas Total e Média)
+                updateSummaryMetrics(allValidData); 
+
+                // Renderização inicial do gráfico
+                renderChart();
+
+                // Esconde o indicador de carregamento e mostra o conteúdo
+                loadingIndicator.classList.add('hidden');
+                chartContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Erro ao carregar ou renderizar o gráfico:", error);
+                loadingIndicator.classList.add('hidden');
+                errorMessage.classList.remove('hidden');
+                errorText.textContent = `Não foi possível carregar os dados do gráfico: ${error.message}`;
+            }
+        });
+    </script>
 </body>
 </html>
