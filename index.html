@@ -311,13 +311,13 @@
                                     return value !== null ? formatNumber(value, 0) : ''; 
                                 }
                             },
-                            // Configuração das Linhas de Meta
+                            // --- LINHAS DE META ---
                             targetLines: {
                                 lines: [
-                                    // Linha Meta (135): Verde Escuro
-                                    { value: 135, label: 'Meta (135)', color: 'rgba(22, 101, 52, 0.9)', dash: [8, 4], width: 2 }, 
-                                    // Linha Limite Inferior (65): Verde Claro/Cítrico
-                                    { value: 65, label: 'Meta (65)', color: 'rgba(101, 163, 13, 0.8)', dash: [8, 4], width: 2 } 
+                                    // Linha Meta 145: Para Dom Pedro (Alto, Deep Teal)
+                                    { value: 135, label: 'DP(135)', color: 'rgba(0, 128, 128, 0.9)', dash: [8, 4], width: 2 }, 
+                                    // Linha Meta 65: Mínima (Baixo, Light Lime Green)
+                                    { value: 65, label: 'Mínima(65)', color: 'rgba(153, 204, 0, 0.7)', dash: [8, 4], width: 2 } 
                                 ]
                             }
                         },
@@ -330,8 +330,15 @@
                             y: {
                                 title: { display: true, text: 'Quantidade de Vendas', font: { size: 14, weight: 'bold' }, color: '#333' },
                                 beginAtZero: true,
-                                ticks: { color: '#555' },
+                                
+                                // --- ALTERAÇÕES PARA O EIXO Y (MAX 300, PASSO 10) ---
+                                max: 300,
+                                ticks: { 
+                                    color: '#555',
+                                    stepSize: 10 // Variação de 10 em 10
+                                },
                                 grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                                // ---------------------------------------------------
                             }
                         }
                     }
@@ -364,7 +371,8 @@
 2025-07-01,65,77,137,54,66,
 2025-08-01,65,49,117,68,65,
 2025-09-01,67,47,110,52,67,
-2025-10-01,46,43,136,74,70,`;
+2025-10-01,46,43,136,74,70,
+2025-11-01,65,57,114,78,67`;
 
                 // Função para analisar o CSV
                 function parseCSV(csv) {
