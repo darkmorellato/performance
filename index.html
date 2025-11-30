@@ -4,93 +4,155 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Performance de Vendas por Loja</title>
-    <!-- Inclui o Tailwind CSS para estilização -->
+    <!-- Inclui o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inclui a biblioteca Chart.js para gráficos -->
+    <!-- Inclui a biblioteca Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <!-- Inclui o plugin Datalabels para mostrar os valores sobre os pontos -->
+    <!-- Inclui o plugin Datalabels -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <!-- Fonte Inter do Google Fonts para garantir renderização correta -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- CSS UNIFICADO -->
-    <style>
-        /* Define a fonte Inter como padrão */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #c7c9ce; /* Cor de fundo suave */
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
         }
-        /* Contêiner do gráfico para controlar altura e largura */
+    </script>
+
+    <style>
+        body {
+            background-color: #f1f5f9; /* Slate 100 - Fundo corporativo claro */
+        }
         .chart-container {
             position: relative;
-            height: 550px; /* Altura aumentada para melhor visualização */
-            width: 100%; /* Largura total */
+            height: 650px; /* Altura aumentada para expandir o campo de visão */
+            width: 100%;
         }
-        /* Estilo para o spinner de carregamento */
+        /* Loader minimalista */
         .loader {
-            border: 4px solid #f0ecec; /* Cinza claro */
-            /* Mantendo o roxo suave para o spinner (neutro) */
-            border-top: 4px solid #7E57C2; 
+            width: 48px;
+            height: 48px;
+            border: 3px solid #e2e8f0;
+            border-bottom-color: #3b82f6;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
         }
-        /* Animação de rotação para o spinner */
-        @keyframes spin {
+        @keyframes rotation {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="p-4 sm:p-8">
-    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-2xl p-6 sm:p-8">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-6 text-center">
-            Desempenho Rede Mi Place
-        </h1>
-        <p class="text-gray-600 text-center mb-8">
-            Análise da quantidade de vendas de aparelhos por loja ao longo dos meses.
-        </p>
+<body class="text-slate-800 antialiased p-4 md:p-8">
 
-        <!-- Área de Métricas de Resumo (Summary Cards) -->
-        <!-- Layout ajustado para 2 colunas -->
-        <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <!-- Card 1: Total de Vendas (Tons de Cinza/Slate) -->
-            <div class="bg-gray-50 border-l-4 border-gray-600 rounded-lg p-4 shadow-md">
-                <p class="text-sm font-medium text-gray-500">Total de Vendas</p>
-                <p id="totalSales" class="text-2xl font-bold text-gray-900 mt-1">...</p>
-            </div>
-            <!-- Card 2: Média Mensal (Mantendo o Verde) -->
-            <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-md">
-                <p class="text-sm font-medium text-gray-500">Média Mensal</p>
-                <p id="averageSales" class="text-2xl font-bold text-gray-900 mt-1">...</p>
-            </div>
+    <!-- Header Principal -->
+    <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+                Dashboard de Vendas
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">
+                Rede Mi Place • Acompanhamento Mensal
+            </p>
         </div>
-
-        <!-- Indicador de carregamento -->
-        <div id="loadingIndicator" class="flex justify-center items-center h-64">
-            <div class="loader"></div>
-            <p class="ml-4 text-gray-700">Carregando dados do gráfico...</p>
-        </div>
-
-        <!-- Contêiner do gráfico (inicialmente oculto) -->
-        <div id="chartContainer" class="chart-container hidden">
-            <canvas id="salesChart"></canvas>
-        </div>
-
-        <!-- Mensagem de erro (inicialmente oculta) -->
-        <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-8" role="alert">
-            <strong class="font-bold">Erro:</strong>
-            <span class="block sm:inline" id="errorText">Não foi possível carregar os dados do gráfico.</span>
+        <div class="mt-4 md:mt-0">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-600 border border-slate-200 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+                Atualizado em tempo real
+            </span>
         </div>
     </div>
 
-    <!-- JAVASCRIPT UNIFICADO -->
+    <!-- Container Principal (Card Branco) -->
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        
+        <!-- KPIs / Cards de Resumo -->
+        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 border-b border-slate-100">
+            <!-- Card 1 -->
+            <div class="p-6 flex items-start space-x-4">
+                <div class="p-3 rounded-lg bg-blue-50 text-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Total de Vendas Acumulado</p>
+                    <p id="totalSales" class="text-3xl font-bold text-slate-900 mt-1">--</p>
+                    <p class="text-xs text-slate-400 mt-1">Período completo</p>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="p-6 flex items-start space-x-4">
+                <div class="p-3 rounded-lg bg-emerald-50 text-emerald-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Média Mensal da Rede</p>
+                    <p id="averageSales" class="text-3xl font-bold text-slate-900 mt-1">--</p>
+                    <p class="text-xs text-slate-400 mt-1">Vendas / Mês</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área do Gráfico -->
+        <div class="p-6 md:p-8">
+            <!-- Loading -->
+            <div id="loadingIndicator" class="flex flex-col justify-center items-center h-80">
+                <span class="loader mb-4"></span>
+                <p class="text-slate-500 text-sm font-medium">Processando dados...</p>
+            </div>
+
+            <!-- Gráfico -->
+            <div id="chartContainer" class="chart-container hidden">
+                <canvas id="salesChart"></canvas>
+            </div>
+
+            <!-- Erro -->
+            <div id="errorMessage" class="hidden p-4 mb-4 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200" role="alert">
+                <span class="font-medium">Erro ao carregar dados:</span> <span id="errorText"></span>
+            </div>
+        </div>
+        
+        <!-- Footer do Card -->
+        <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+            <span>Dados de performance interna</span>
+            <span>Mi Place Analytics</span>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
     <script>
-        // Variáveis globais para gerenciamento de dados e gráfico
+        // Variáveis globais
         let salesChartInstance = null;
         let allValidData = []; 
         let chartLabels = [];
 
-        // Define o plugin Customizado para Linhas de Meta
+        // --- PLUGIN: LINHAS DE META (Estilo Refinado) ---
         const targetLinesPlugin = {
             id: 'targetLines',
             beforeDraw: (chart) => {
@@ -100,261 +162,219 @@
                 if (targetLines.length === 0) return;
 
                 ctx.save();
-
                 targetLines.forEach(line => {
                     const yPosition = y.getPixelForValue(line.value);
 
-                    // Desenha a linha
-                    ctx.strokeStyle = line.color || 'gray';
-                    ctx.lineWidth = line.width || 2;
-                    ctx.setLineDash(line.dash || [6, 6]); // Linha tracejada
+                    // Linha
+                    ctx.strokeStyle = line.color || '#94a3b8';
+                    ctx.lineWidth = line.width || 1;
+                    ctx.setLineDash(line.dash || [4, 4]);
                     
                     ctx.beginPath();
                     ctx.moveTo(left, yPosition);
                     ctx.lineTo(right, yPosition);
                     ctx.stroke();
 
-                    // Desenha o rótulo (texto)
-                    ctx.fillStyle = line.color || 'gray';
-                    ctx.font = '10px Inter, sans-serif';
+                    // Se não houver texto definido, não desenha nada além da linha
+                    if (!line.label) return;
+
+                    // Label (Tag na esquerda)
+                    ctx.fillStyle = line.labelBg || line.color;
+                    ctx.font = 'bold 10px Inter';
+                    const text = line.label;
+                    
+                    ctx.fillStyle = line.color;
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'bottom';
-                    // Adiciona um fundo para o texto para melhorar a visibilidade sobre as linhas de grade
-                    ctx.clearRect(left + 3, yPosition - 12, ctx.measureText(line.label).width + 4, 12);
-                    ctx.fillText(line.label || `Meta: ${line.value}`, left + 5, yPosition - 2);
+                    ctx.fillText(text, left, yPosition - 4);
                 });
-
                 ctx.restore();
             }
         };
 
-        // Registra o plugin Datalabels e o plugin customizado
-        if (typeof ChartDataLabels !== 'undefined') {
-            Chart.register(ChartDataLabels);
-        } else {
-            console.warn("Plugin ChartDataLabels não carregado. Rótulos de dados não serão exibidos.");
-        }
-        Chart.register(targetLinesPlugin); // Registro do plugin de Linhas de Meta
+        Chart.register(targetLinesPlugin);
+        if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
 
-
-        // Configuração para lojas e cores consistentes 
+        // --- CONFIGURAÇÃO DE CORES (Paleta Profissional) ---
+        // Cores ajustadas para serem menos saturadas e mais elegantes
         const STORE_CONFIG = {
-            // KASSOUF -> Laranja
-            'MI PLACE KASSOUF': { color: 'rgba(255, 140, 0, 1)', borderColor: 'rgba(255, 100, 0, 1)' }, 
-            // XV -> Preto
-            'MI PLACE XV': { color: 'rgba(0, 0, 0, 1)', borderColor: 'rgba(0, 0, 0, 1)' },
-            // DOM PEDRO -> Azul
-            'MI PLACE DOM PEDRO': { color: 'rgba(30, 144, 255, 1)', borderColor: 'rgba(0, 100, 255, 1)' },
-            // REALME -> Amarelo (Usando uma variação mais forte para visibilidade)
-            'MI PLACE REALME': { color: 'rgba(255, 215, 0, 1)', borderColor: 'rgba(218, 165, 32, 1)' }, 
-            // PREMIUM -> Roxo
-            'MI PLACE PREMIUM': { color: 'rgba(138, 43, 226, 1)', borderColor: 'rgba(99, 0, 255, 1)' }
+            'MI PLACE KASSOUF':   { color: '#F97316', borderColor: '#EA580C' }, // Orange-500/600
+            'MI PLACE XV':        { color: '#334155', borderColor: '#0F172A' }, // Slate-700/900 (Preto Suave)
+            'MI PLACE DOM PEDRO': { color: '#3B82F6', borderColor: '#2563EB' }, // Blue-500/600
+            'MI PLACE REALME':    { color: '#EAB308', borderColor: '#CA8A04' }, // Yellow-500/Darker
+            'MI PLACE PREMIUM':   { color: '#A855F7', borderColor: '#7C3AED' }  // Purple-500/600
         };
         const allStoreNames = Object.keys(STORE_CONFIG);
 
-        // Função utilitária para formatar a data como "Mês/Ano" (ex: Out/25)
+        // Formatadores
         const getFormattedDate = (dateStr) => {
             const date = new Date(dateStr);
-            // Certifica-se de que a data é válida
-            if (isNaN(date.getTime())) return 'Inválido';
-            
+            if (isNaN(date.getTime())) return '-';
             const month = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
             const year = date.getFullYear().toString().slice(-2);
             return `${month.charAt(0).toUpperCase() + month.slice(1)}/${year}`;
         };
 
-        // Função utilitária para formatar números com separadores (ex: 1.234)
         const formatNumber = (num, decimals = 0) => {
-            if (num === null || isNaN(num)) return 'N/A';
-            return new Intl.NumberFormat('pt-BR', {
-                minimumFractionDigits: decimals,
-                maximumFractionDigits: decimals,
-            }).format(num);
+            if (num === null || isNaN(num)) return '-';
+            return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(num);
         };
 
-        // Função para calcular e atualizar métricas de resumo
+        // Lógica de Negócio
         const updateSummaryMetrics = (data) => {
             let totalSales = 0;
             const numMonths = data.length;
 
-            // Calcula totais
             data.forEach(row => {
                 allStoreNames.forEach(store => {
                     const sales = parseFloat(row[store]);
-                    if (!isNaN(sales)) {
-                        totalSales += sales;
-                    }
+                    if (!isNaN(sales)) totalSales += sales;
                 });
             });
 
-            // Calcula média mensal
             const averageSales = numMonths > 0 ? totalSales / numMonths : 0;
             
-            // Atualiza os elementos DOM
+            // Animação simples de contagem (opcional, aqui direto)
             document.getElementById('totalSales').textContent = formatNumber(totalSales);
             document.getElementById('averageSales').textContent = formatNumber(averageSales, 1);
         };
         
-        // Função para renderizar ou atualizar a instância do Chart.js
         const renderChart = () => {
-            if (!allValidData.length || !chartLabels.length) {
-                console.error("Dados ou rótulos ausentes para renderização do gráfico.");
-                return;
-            }
+            if (!allValidData.length || !chartLabels.length) return;
 
-            // 1. Define todas as lojas como selecionadas
-            const selectedStores = allStoreNames;
-            
-            // 2. Prepara os datasets (APENAS Vendas Reais)
-            const datasets = [];
-
-            selectedStores.forEach(store => {
+            const datasets = allStoreNames.map(store => {
                 const config = STORE_CONFIG[store];
-                
-                // Dataset de Vendas Reais (Actual Sales)
-                datasets.push({
-                    label: store,
+                return {
+                    label: store.replace('MI PLACE ', ''), // Remove prefixo para limpar a legenda
                     data: allValidData.map(row => {
-                        const value = parseFloat(row[store]);
-                        return isNaN(value) ? null : value;
+                        const val = parseFloat(row[store]);
+                        return isNaN(val) ? null : val;
                     }),
                     borderColor: config.borderColor,
                     backgroundColor: config.color,
-                    tension: 0.3,
+                    tension: 0.35, // Curva um pouco mais suave
                     fill: false,
-                    // Aumentando o tamanho do ponto
-                    pointRadius: 8, 
-                    pointHoverRadius: 12, 
-                    // Ponto branco interno com contorno colorido
-                    pointBackgroundColor: '#fff', 
-                    pointBorderColor: config.borderColor, 
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: config.borderColor,
                     pointBorderWidth: 2,
-                    borderWidth: 3,
-                    borderDash: [], // Linha completa (sólida)
-                });
+                    borderWidth: 2.5,
+                };
             });
             
-            // 3. Cria ou Atualiza o Gráfico
             const ctx = document.getElementById('salesChart').getContext('2d');
             
-            const chartTitle = document.getElementById('salesChart').title; 
-
             if (salesChartInstance) {
-                // Atualiza a instância existente (mais rápido)
-                salesChartInstance.data.datasets = datasets;
-                salesChartInstance.update();
-            } else {
-                // Cria nova instância do gráfico
-                salesChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartLabels,
-                        datasets: datasets
+                salesChartInstance.destroy();
+            }
+
+            // Defaults globais do Chart.js para fonte
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#64748b';
+
+            salesChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: chartLabels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false, 
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: chartTitle, 
-                                font: { size: 20, weight: 'bold' },
-                                color: '#333'
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
-                                backgroundColor: 'rgba(0,0,0,0.8)',
-                                titleFont: { size: 14 },
-                                bodyFont: { size: 12 },
-                                padding: 10,
-                                displayColors: true,
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) { label += ': '; }
-                                        
-                                        // Usa o formatNumber para vendas
-                                        if (context.parsed.y !== null) {
-                                            label += formatNumber(context.parsed.y);
-                                        } else {
-                                            label += 'N/A';
-                                        }
-                                        return label;
-                                    }
-                                }
-                            },
-                            legend: {
-                                display: true,
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 12 },
-                                    color: '#555',
-                                    usePointStyle: true
-                                }
-                            },
-                            // Configuração para exibir rótulos de dados NOS pontos
-                            datalabels: {
-                                align: 'center', // Alinha o texto no centro do ponto
-                                anchor: 'center', // Âncora no centro do ponto
-                                offset: 0, // Sem deslocamento
-                                color: function(context) {
-                                    // Usa a cor do contorno do ponto (cor da linha) para seguir a cor de cada linha
-                                    return context.dataset.pointBorderColor; 
-                                },
-                                font: {
-                                    weight: 'bold',
-                                    size: 8 // Fonte reduzida para 8 para caber melhor no ponto
-                                },
-                                formatter: function(value, context) {
-                                    // Apenas exibe o valor (quantidade de vendas) se não for nulo
-                                    return value !== null ? formatNumber(value, 0) : ''; 
-                                }
-                            },
-                            // --- LINHAS DE META ---
-                            targetLines: {
-                                lines: [
-                                    // Linha Meta 145: Para Dom Pedro (Alto, Deep Teal)
-                                    { value: 135, label: 'DP(135)', color: 'rgba(0, 128, 128, 0.9)', dash: [8, 4], width: 2 }, 
-                                    // Linha Meta 65: Mínima (Baixo, Light Lime Green)
-                                    { value: 65, label: 'Mínima(65)', color: 'rgba(153, 204, 0, 0.7)', dash: [8, 4], width: 2 } 
-                                ]
+                    layout: {
+                        padding: { top: 20, right: 30, left: 10, bottom: 0 }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 8,
+                                padding: 20,
+                                font: { size: 11, weight: 500 },
+                                color: '#475569'
                             }
                         },
-                        scales: {
-                            x: {
-                                title: { display: true, text: 'Mês', font: { size: 14, weight: 'bold' }, color: '#333' },
-                                ticks: { color: '#555' },
-                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        tooltip: {
+                            backgroundColor: '#ffffff',
+                            titleColor: '#1e293b',
+                            bodyColor: '#475569',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            padding: 12,
+                            boxPadding: 6,
+                            usePointStyle: true,
+                            titleFont: { size: 13, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            cornerRadius: 8,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) label += formatNumber(context.parsed.y);
+                                    return label;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'end',
+                            offset: 4,
+                            color: function(ctx) { return ctx.dataset.borderColor },
+                            font: { weight: 'bold', size: 9 },
+                            formatter: (val) => val !== null ? Math.round(val) : '',
+                            display: function(context) {
+                                return 'auto'; 
+                            }
+                        },
+                        targetLines: {
+                            // Textos removidos (label: '')
+                            lines: [
+                                { value: 135, label: '', color: '#0d9488', dash: [4, 4], width: 1.5 }, // Teal-600
+                                { value: 65, label: '', color: '#65a30d', dash: [4, 4], width: 1.5 }   // Lime-600
+                            ]
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false }, // Remove grid vertical
+                            ticks: { font: { size: 11 }, color: '#64748b' },
+                            border: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 300,
+                            border: { display: false }, // Remove linha do eixo Y
+                            grid: {
+                                color: '#f1f5f9', // Linhas horizontais muito sutis
+                                borderDash: [4, 4],
+                                tickLength: 0
                             },
-                            y: {
-                                title: { display: true, text: 'Quantidade de Vendas', font: { size: 14, weight: 'bold' }, color: '#333' },
-                                beginAtZero: true,
-                                
-                                // --- ALTERAÇÕES PARA O EIXO Y (MAX 300, PASSO 10) ---
-                                max: 300,
-                                ticks: { 
-                                    color: '#555',
-                                    stepSize: 10 // Variação de 10 em 10
-                                },
-                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                                // ---------------------------------------------------
+                            ticks: {
+                                stepSize: 50, // Menos poluição nos números do eixo Y
+                                padding: 10,
+                                font: { size: 11 },
+                                color: '#94a3b8'
                             }
                         }
                     }
-                });
-            }
+                }
+            });
         };
 
-        // Lógica principal ao carregar o DOM
-        document.addEventListener('DOMContentLoaded', async () => {
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
             const loadingIndicator = document.getElementById('loadingIndicator');
             const chartContainer = document.getElementById('chartContainer');
             const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
 
             try {
-                // Dados em formato CSV (embutidos no código)
+                // CSV DATA (Incluindo a correção para DEZ/25)
                 const csvData = `MES,MI PLACE KASSOUF,MI PLACE XV,MI PLACE DOM PEDRO,MI PLACE REALME,MI PLACE PREMIUM
 2024-07-01,107,104,,57,
 2024-08-01,113,90,132,57,
@@ -372,58 +392,37 @@
 2025-08-01,65,49,117,68,65,
 2025-09-01,67,47,110,52,67,
 2025-10-01,46,43,136,74,70,
-2025-11-01,65,57,114,78,67`;
+2025-11-01,65,57,114,78,67,
+2025-12-01,65,56,152,81,66`;
 
-                // Função para analisar o CSV
-                function parseCSV(csv) {
-                    const lines = csv.trim().split('\n');
-                    const headers = lines[0].split(',').map(h => h.trim()); 
-                    const data = [];
-
-                    for (let i = 1; i < lines.length; i++) {
-                        const values = lines[i].split(',').map(v => v.trim());
-                        const row = {};
-                        
-                        headers.forEach((header, index) => {
-                            const value = values[index];
-                            row[header] = value === '' || value === undefined ? null : value;
-                        });
-                        data.push(row);
-                    }
-                    return data;
-                }
-
-                const parsedData = parseCSV(csvData);
-
-                // Armazena dados válidos globalmente
-                allValidData = parsedData.filter(row => row.MES); 
-                if (allValidData.length === 0) {
-                    throw new Error("Dados de vendas ausentes ou no formato incorreto.");
-                }
-
-                // Prepara rótulos globalmente
-                chartLabels = allValidData.map(row => getFormattedDate(row.MES));
+                // Parser CSV Simplificado
+                const lines = csvData.trim().split('\n');
+                const headers = lines[0].split(',').map(h => h.trim()); 
                 
-                // Define o título dinâmico no elemento canvas
-                const startDate = getFormattedDate(allValidData[0].MES);
-                const endDate = getFormattedDate(allValidData[allValidData.length - 1].MES);
-                document.getElementById('salesChart').title = `Quantidade de Vendas por Loja (${startDate} - ${endDate})`;
+                const parsedData = lines.slice(1).map(line => {
+                    const values = line.split(',').map(v => v.trim());
+                    return headers.reduce((acc, header, index) => {
+                        const val = values[index];
+                        acc[header] = (val === '' || val === undefined) ? null : val;
+                        return acc;
+                    }, {});
+                });
 
-                // Atualiza os cartões de resumo (agora apenas Total e Média)
-                updateSummaryMetrics(allValidData); 
+                allValidData = parsedData.filter(row => row.MES); 
+                chartLabels = allValidData.map(row => getFormattedDate(row.MES));
 
-                // Renderização inicial do gráfico
+                // Atualizar UI
+                updateSummaryMetrics(allValidData);
                 renderChart();
 
-                // Esconde o indicador de carregamento e mostra o conteúdo
                 loadingIndicator.classList.add('hidden');
                 chartContainer.classList.remove('hidden');
 
             } catch (error) {
-                console.error("Erro ao carregar ou renderizar o gráfico:", error);
+                console.error(error);
                 loadingIndicator.classList.add('hidden');
                 errorMessage.classList.remove('hidden');
-                errorText.textContent = `Não foi possível carregar os dados do gráfico: ${error.message}`;
+                document.getElementById('errorText').textContent = error.message;
             }
         });
     </script>
