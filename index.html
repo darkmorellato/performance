@@ -63,6 +63,25 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        /* Animações do Modal */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 300ms ease-out, transform 300ms ease-out;
+        }
+        .modal-exit {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 200ms ease-in, transform 200ms ease-in;
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased p-4 md:p-8">
@@ -86,7 +105,7 @@
     </div>
 
     <!-- Container Principal (Card Branco) -->
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
         
         <!-- KPIs / Cards de Resumo -->
         <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 border-b border-slate-100">
@@ -120,7 +139,7 @@
         </div>
 
         <!-- Área do Gráfico -->
-        <div class="p-6 md:p-8">
+        <div class="p-6 md:p-8 relative">
             <!-- Loading -->
             <div id="loadingIndicator" class="flex flex-col justify-center items-center h-80">
                 <span class="loader mb-4"></span>
@@ -145,12 +164,89 @@
         </div>
     </div>
 
+    <!-- MODAL DE DETALHES (Zoom Effect) -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <!-- Panel -->
+                <div id="modalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-sm modal-enter opacity-0 scale-95">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start sm:justify-center">
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-center w-full">
+                                <!-- Conteúdo Dinâmico -->
+                                <h3 class="text-base font-semibold leading-6 text-slate-400 uppercase tracking-widest" id="modalStoreName">LOJA</h3>
+                                <div class="mt-4">
+                                    <p class="text-sm text-slate-500 mb-1" id="modalDateLabel">Mês/Ano</p>
+                                    <p class="text-6xl font-bold tracking-tighter" id="modalValueDisplay">0</p>
+                                    <p class="text-xs font-medium text-slate-400 mt-2">Vendas Realizadas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:justify-center sm:px-6">
+                        <button type="button" id="closeModalBtn" class="inline-flex w-full justify-center rounded-md bg-white px-8 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:w-auto">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         // Variáveis globais
         let salesChartInstance = null;
         let allValidData = []; 
         let chartLabels = [];
+
+        // Elementos do Modal
+        const modal = document.getElementById('detailModal');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const modalPanel = document.getElementById('modalPanel');
+        const modalStoreName = document.getElementById('modalStoreName');
+        const modalDateLabel = document.getElementById('modalDateLabel');
+        const modalValueDisplay = document.getElementById('modalValueDisplay');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        // Funções do Modal
+        function openModal(store, date, value, color) {
+            modalStoreName.textContent = store;
+            modalStoreName.style.color = color; // Usa a cor da loja
+            modalDateLabel.textContent = date;
+            modalValueDisplay.textContent = formatNumber(value);
+            modalValueDisplay.style.color = color; // Usa a cor da loja para o número grande
+
+            modal.classList.remove('hidden');
+            
+            // Pequeno delay para permitir a transição CSS
+            setTimeout(() => {
+                modalBackdrop.classList.remove('opacity-0');
+                modalPanel.classList.remove('opacity-0', 'scale-95');
+                modalPanel.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.add('opacity-0');
+            modalPanel.classList.remove('opacity-100', 'scale-100');
+            modalPanel.classList.add('opacity-0', 'scale-95');
+
+            // Espera a animação acabar para esconder
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Event Listeners do Modal
+        closeModalBtn.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
 
         // --- PLUGIN: LINHAS DE META (Estilo Refinado) ---
         const targetLinesPlugin = {
@@ -239,6 +335,68 @@
             document.getElementById('averageSales').textContent = formatNumber(averageSales, 1);
         };
         
+        // --- FUNÇÃO PARA MANIPULAR HOVER (Spotlight Effect - Versão Reforçada) ---
+        const handleHoverEffect = (activeElements, chart) => {
+            if (!chart) return;
+
+            const isHovering = activeElements.length > 0;
+            const activeIndex = isHovering ? activeElements[0].datasetIndex : -1;
+            const greyColor = '#cbd5e1'; // Cor cinza para inativos (Slate-300)
+            
+            chart.data.datasets.forEach((dataset, idx) => {
+                // Prevenção de erro: assegura que datalabels existe
+                dataset.datalabels = dataset.datalabels || {};
+
+                if (isHovering) {
+                    if (idx === activeIndex) {
+                        // === ESTADO ATIVO (SPOTLIGHT) ===
+                        dataset.borderColor = dataset.originalBorderColor;
+                        dataset.borderWidth = 4;
+                        
+                        // Restaurar cores das bolinhas ativas
+                        dataset.pointRadius = 6; 
+                        dataset.pointBorderColor = dataset.originalBorderColor; 
+                        dataset.pointBackgroundColor = '#ffffff';
+                        dataset.pointHoverRadius = 8;
+                        dataset.pointHoverBorderColor = dataset.originalBorderColor;
+                        
+                        dataset.datalabels.display = 'auto';
+                        dataset.order = 1; 
+                    } else {
+                        // === ESTADO INATIVO (CINZA APAGADO) ===
+                        dataset.borderColor = greyColor;
+                        dataset.borderWidth = 2;
+                        
+                        // FORÇAR AS BOLINHAS A SEREM CINZAS
+                        dataset.pointRadius = 4;
+                        dataset.pointBorderColor = greyColor;       // Borda cinza
+                        dataset.pointBackgroundColor = '#ffffff';   // Fundo branco
+                        dataset.pointHoverRadius = 4;               // Sem aumento no hover se inativo
+                        dataset.pointHoverBorderColor = greyColor;  // Prevenir cor no hover acidental
+                        
+                        dataset.datalabels.display = false;
+                        dataset.order = 10;
+                    }
+                } else {
+                    // === ESTADO PADRÃO (SEM HOVER) ===
+                    dataset.borderColor = dataset.originalBorderColor;
+                    dataset.borderWidth = 2.5;
+                    
+                    dataset.pointRadius = 6;
+                    dataset.pointBorderColor = dataset.originalBorderColor;
+                    dataset.pointBackgroundColor = '#ffffff';
+                    dataset.pointHoverRadius = 8;
+                    dataset.pointHoverBorderColor = dataset.originalBorderColor;
+                    
+                    dataset.datalabels.display = 'auto';
+                    dataset.order = 0;
+                }
+            });
+            
+            // Força a atualização de todos os estilos
+            chart.update(); 
+        };
+
         const renderChart = () => {
             if (!allValidData.length || !chartLabels.length) return;
 
@@ -250,16 +408,28 @@
                         const val = parseFloat(row[store]);
                         return isNaN(val) ? null : val;
                     }),
+                    // Guardamos as cores originais no objeto para recuperar no hover
+                    originalBorderColor: config.borderColor, 
+                    originalBackgroundColor: config.color,
+                    
                     borderColor: config.borderColor,
                     backgroundColor: config.color,
                     tension: 0.35, // Curva um pouco mais suave
                     fill: false,
+                    
+                    // Configuração inicial dos pontos
                     pointRadius: 6,
-                    pointHoverRadius: 9,
+                    pointHoverRadius: 8, // Ligeiro aumento no hover individual
+                    hitRadius: 30, // Margem grande para detetar o hover facilmente
                     pointBackgroundColor: '#ffffff',
                     pointBorderColor: config.borderColor,
                     pointBorderWidth: 2,
                     borderWidth: 2.5,
+                    
+                    // Inicialização explícita para evitar erros
+                    datalabels: {
+                        display: 'auto'
+                    }
                 };
             });
             
@@ -280,8 +450,35 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: {
-                        mode: 'index',
-                        intersect: false,
+                        mode: 'nearest', // Destaca o elemento mais próximo
+                        intersect: true, // APENAS quando passa por cima (não na coluna inteira)
+                        axis: 'xy'
+                    },
+                    // --- EVENTO DE CLIQUE (Zoom/Modal) ---
+                    onClick: (event, elements, chart) => {
+                        if (!elements.length) return;
+
+                        const element = elements[0];
+                        const datasetIndex = element.datasetIndex;
+                        const index = element.index;
+                        
+                        // Recupera os dados do ponto clicado
+                        const dataset = chart.data.datasets[datasetIndex];
+                        const storeName = dataset.label;
+                        const value = dataset.data[index];
+                        const dateLabel = chart.data.labels[index];
+                        // Usa a cor original da marca guardada no dataset
+                        const color = dataset.originalBackgroundColor;
+
+                        if (value !== null) {
+                            openModal(storeName, dateLabel, value, color);
+                        }
+                    },
+                    // Eventos de Hover Personalizados
+                    onHover: (event, activeElements, chart) => {
+                        // Muda cursor para pointer se estiver sobre um ponto
+                        event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                        handleHoverEffect(activeElements, chart);
                     },
                     layout: {
                         padding: { top: 20, right: 30, left: 10, bottom: 0 }
@@ -291,12 +488,38 @@
                             display: true,
                             position: 'top',
                             align: 'end',
+                            // Adicionar efeito de hover também na legenda
+                            onHover: function(event, legendItem, legend) {
+                                const index = legendItem.datasetIndex;
+                                const chart = legend.chart;
+                                event.native.target.style.cursor = 'pointer'; // Cursor mãozinha na legenda
+                                // Simula o array de elementos ativos usando o índice da legenda
+                                const fakeActiveElements = [{ datasetIndex: index }];
+                                handleHoverEffect(fakeActiveElements, chart);
+                            },
+                            onLeave: function(event, legendItem, legend) {
+                                event.native.target.style.cursor = 'default';
+                                handleHoverEffect([], legend.chart);
+                            },
                             labels: {
                                 usePointStyle: true,
                                 boxWidth: 8,
                                 padding: 20,
                                 font: { size: 11, weight: 500 },
-                                color: '#475569'
+                                color: '#475569',
+                                // FIX: Gerar etiquetas fixas para evitar "tremer"
+                                generateLabels: (chart) => {
+                                    return chart.data.datasets.map((dataset, i) => ({
+                                        text: dataset.label,
+                                        fillStyle: dataset.originalBackgroundColor, // Usa sempre a cor original
+                                        strokeStyle: dataset.originalBorderColor,   // Usa sempre a cor original
+                                        lineWidth: 2,
+                                        hidden: !chart.isDatasetVisible(i),
+                                        index: i,
+                                        datasetIndex: i,
+                                        pointStyle: 'circle'
+                                    }));
+                                }
                             }
                         },
                         tooltip: {
@@ -325,38 +548,41 @@
                             align: 'top',
                             anchor: 'end',
                             offset: 4,
+                            // Usa a cor da borda atual (que pode ser cinza no hover)
                             color: function(ctx) { return ctx.dataset.borderColor },
                             font: { weight: 'bold', size: 9 },
                             formatter: (val) => val !== null ? Math.round(val) : '',
                             display: function(context) {
-                                return 'auto'; 
+                                // Lê diretamente da propriedade que manipulamos no hover
+                                return context.dataset.datalabels && context.dataset.datalabels.display !== undefined 
+                                    ? context.dataset.datalabels.display 
+                                    : 'auto';
                             }
                         },
                         targetLines: {
-                            // Textos removidos (label: '')
                             lines: [
-                                { value: 135, label: '', color: '#0d9488', dash: [4, 4], width: 1.5 }, // Teal-600
-                                { value: 65, label: '', color: '#65a30d', dash: [4, 4], width: 1.5 }    // Lime-600
+                                { value: 135, label: '', color: '#0d9488', dash: [4, 4], width: 1.5 },
+                                { value: 65, label: '', color: '#65a30d', dash: [4, 4], width: 1.5 } 
                             ]
                         }
                     },
                     scales: {
                         x: {
-                            grid: { display: false }, // Remove grid vertical
+                            grid: { display: false },
                             ticks: { font: { size: 11 }, color: '#64748b' },
                             border: { display: false }
                         },
                         y: {
                             beginAtZero: true,
                             max: 300,
-                            border: { display: false }, // Remove linha do eixo Y
+                            border: { display: false },
                             grid: {
-                                color: '#f1f5f9', // Linhas horizontais muito sutis
+                                color: '#f1f5f9',
                                 borderDash: [4, 4],
                                 tickLength: 0
                             },
                             ticks: {
-                                stepSize: 50, // Menos poluição nos números do eixo Y
+                                stepSize: 50,
                                 padding: 10,
                                 font: { size: 11 },
                                 color: '#94a3b8'
@@ -374,7 +600,7 @@
             const errorMessage = document.getElementById('errorMessage');
 
             try {
-                // CSV DATA (Incluindo a correção para DEZ/25)
+                // CSV DATA (Incluindo Fev/26 conforme solicitado)
                 const csvData = `MES,MI PLACE KASSOUF,MI PLACE XV,MI PLACE DOM PEDRO,MI PLACE REALME,MI PLACE PREMIUM
 2024-07-01,107,104,,57,
 2024-08-01,113,90,132,57,
@@ -394,7 +620,8 @@
 2025-10-01,46,43,136,74,70,
 2025-11-01,65,57,114,78,67,
 2025-12-01,65,56,152,81,66,
-2026-01-01,46,56,151,55,67`;
+2026-01-01,46,56,151,55,67
+2026-02-01,66,35,118,55,41`;
 
                 // Parser CSV Simplificado
                 const lines = csvData.trim().split('\n');
