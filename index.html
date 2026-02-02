@@ -172,7 +172,7 @@
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <!-- Panel -->
-                <div id="modalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-sm modal-enter opacity-0 scale-95">
+                <div id="modalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg modal-enter opacity-0 scale-95">
                     <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start sm:justify-center">
                             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-center w-full">
@@ -182,6 +182,14 @@
                                     <p class="text-sm text-slate-500 mb-1" id="modalDateLabel">Mês/Ano</p>
                                     <p class="text-6xl font-bold tracking-tighter" id="modalValueDisplay">0</p>
                                     <p class="text-xs font-medium text-slate-400 mt-2">Vendas Realizadas</p>
+                                </div>
+                                
+                                <!-- Container de Feedback -->
+                                <div id="modalFeedbackContainer" class="mt-6 border-t border-slate-100 pt-4 text-left hidden">
+                                    <!-- Aumentei o texto base, o espaçamento vertical e o padding para facilitar a leitura -->
+                                    <div id="modalFeedbackContent" class="text-base text-slate-600 space-y-4 bg-slate-50 p-5 rounded-lg leading-relaxed">
+                                        <!-- Feedback Inserido via JS -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -201,6 +209,80 @@
         let allValidData = []; 
         let chartLabels = [];
 
+        // TEXTOS DE FEEDBACK
+        // Atualizei as classes CSS dentro das strings HTML para aumentar o texto (text-base, text-lg) e o espaçamento.
+        const DOM_PEDRO_TEXT = `
+            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Dom Pedro (Meta: 135 | Realizado: 118)</p>
+            <div class="space-y-3">
+                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Não Atingiu a Meta</span></p>
+                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 151 &rarr; 118 (-21,8% de retração)</p>
+                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
+                    <strong>Feedback:</strong><br/>
+                    A unidade vinha de um dezembro excepcional (151 vendas, superando a meta), mas sofreu uma desaceleração considerável em janeiro. Embora ainda mantenha o maior volume absoluto da rede, a perda de 33 vendas de um mês para o outro indica que a loja não conseguiu sustentar o fluxo pós-férias. Vamos manter o foco neste mês de Fevereiro equipe!
+                </div>
+            </div>
+        `;
+        const KASSOUF_TEXT = `
+            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Kassouf (Meta: 65 | Realizado: 66)</p>
+            <div class="space-y-3">
+                <p class="text-base"><strong>Status:</strong> <span class="text-emerald-600 font-bold">Meta Atingida</span> (Única loja a atingir o objetivo)</p>
+                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 46 &rarr; 66 (+43% de crescimento)</p>
+                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-emerald-300 pl-4 py-1 leading-relaxed">
+                    <strong>Feedback:</strong><br/>
+                    A unidade é o destaque positivo do mês. Ao contrário do restante da rede, a Kassouf reverteu o resultado ruim de dezembro 2025 (46 vendas) e acelerou fortemente em janeiro, superando a barreira das 65 unidades. Demonstrou excelente capacidade de recuperação a curto prazo. Parabéns Equipe!
+                </div>
+            </div>
+        `;
+        const REALME_TEXT = `
+            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Realme (Meta: 65 | Realizado: 55)</p>
+            <div class="space-y-3">
+                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Não Atingiu a Meta</span></p>
+                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 55 &rarr; 55 (Estagnado)</p>
+                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
+                    <strong>Feedback:</strong><br/>
+                    A unidade mostra estagnação em um patamar satisfatório. Não houve piora (como na XV ou Premium), mas também não houve reação. Esse resultado consolida uma tendência de média performance que precisa ser revertida em março, pois sabemos da capacidade da equipe. Isso mostra que a equipe está pronta para decolar nos próximos meses.
+                </div>
+            </div>
+        `;
+        const PREMIUM_TEXT = `
+            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Premium (Meta: 65 | Realizado: 41)</p>
+            <div class="space-y-3">
+                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Não Atingiu a Meta</span></p>
+                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 67 &rarr; 41 (-38,8% de retração)</p>
+                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
+                    <strong>Feedback:</strong><br/>
+                    A unidade apresentou a oscilação mais negativa da rede. Saiu de um status de "Meta Batida" em dezembro 2025 (67 vendas) para um resultado muito abaixo do esperado em janeiro. Essa volatilidade alta prejudica a previsibilidade de receita da loja. Vamos trabalhar para se manter na meta como sempre foi feito!
+                </div>
+            </div>
+        `;
+        const XV_TEXT = `
+            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place XV (Meta: 65 | Realizado: 35)</p>
+            <div class="space-y-3">
+                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Crítico</span></p>
+                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 56 &rarr; 35 (-37,5% de retração)</p>
+                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
+                    <strong>Feedback:</strong><br/>
+                    Situação alarmante. Em dezembro, a loja estava próxima da meta (56), mas em janeiro o desempenho colapsou para quase metade do objetivo (35). É o pior resultado da unidade em todo o histórico recente, exigindo diagnóstico imediato. É hora de seguir as recomendaçõe da Jack para reverter o resultado e mudar esse cenário!
+                </div>
+            </div>
+        `;
+
+        const FEEDBACK_DATA = {
+            // Chaves para Fev/26 (Data correta)
+            'DOM PEDRO-Fev/26': DOM_PEDRO_TEXT,
+            'KASSOUF-Fev/26': KASSOUF_TEXT,
+            'REALME-Fev/26': REALME_TEXT,
+            'PREMIUM-Fev/26': PREMIUM_TEXT,
+            'XV-Fev/26': XV_TEXT,
+
+            // Chaves para Jan/26 (Caso o rótulo esteja a aparecer como Jan/26 por qualquer motivo)
+            'DOM PEDRO-Jan/26': DOM_PEDRO_TEXT,
+            'KASSOUF-Jan/26': KASSOUF_TEXT,
+            'REALME-Jan/26': REALME_TEXT,
+            'PREMIUM-Jan/26': PREMIUM_TEXT,
+            'XV-Jan/26': XV_TEXT
+        };
+
         // Elementos do Modal
         const modal = document.getElementById('detailModal');
         const modalBackdrop = document.getElementById('modalBackdrop');
@@ -208,6 +290,8 @@
         const modalStoreName = document.getElementById('modalStoreName');
         const modalDateLabel = document.getElementById('modalDateLabel');
         const modalValueDisplay = document.getElementById('modalValueDisplay');
+        const modalFeedbackContainer = document.getElementById('modalFeedbackContainer');
+        const modalFeedbackContent = document.getElementById('modalFeedbackContent');
         const closeModalBtn = document.getElementById('closeModalBtn');
 
         // Funções do Modal
@@ -217,6 +301,18 @@
             modalDateLabel.textContent = date;
             modalValueDisplay.textContent = formatNumber(value);
             modalValueDisplay.style.color = color; // Usa a cor da loja para o número grande
+
+            // Lógica de Feedback
+            const feedbackKey = `${store}-${date}`;
+            const feedbackHTML = FEEDBACK_DATA[feedbackKey];
+
+            if (feedbackHTML) {
+                modalFeedbackContent.innerHTML = feedbackHTML;
+                modalFeedbackContainer.classList.remove('hidden');
+            } else {
+                modalFeedbackContainer.classList.add('hidden');
+                modalFeedbackContent.innerHTML = '';
+            }
 
             modal.classList.remove('hidden');
             
@@ -304,7 +400,11 @@
 
         // Formatadores
         const getFormattedDate = (dateStr) => {
-            const date = new Date(dateStr);
+            if (!dateStr) return '-';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return '-';
+            // Data Local para evitar UTC offsets
+            const date = new Date(parts[0], parts[1] - 1, parts[2]);
             if (isNaN(date.getTime())) return '-';
             const month = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
             const year = date.getFullYear().toString().slice(-2);
@@ -393,7 +493,7 @@
                 }
             });
             
-            // Força a atualização de todos os estilos
+            // Força a atualização de todos os estilos (sem 'none' para garantir redesenho)
             chart.update(); 
         };
 
