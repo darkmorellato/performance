@@ -164,38 +164,35 @@
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES (Zoom Effect) -->
+    <!-- MODAL DE DETALHES -->
     <div id="detailModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <!-- Backdrop -->
+        <!-- Backdrop (Fundo Escurecido) -->
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop"></div>
 
-        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <!-- Panel -->
-                <div id="modalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg modal-enter opacity-0 scale-95">
-                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start sm:justify-center">
-                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-center w-full">
-                                <!-- Conteúdo Dinâmico -->
-                                <h3 class="text-base font-semibold leading-6 text-slate-400 uppercase tracking-widest" id="modalStoreName">LOJA</h3>
-                                <div class="mt-4">
-                                    <p class="text-sm text-slate-500 mb-1" id="modalDateLabel">Mês/Ano</p>
-                                    <p class="text-6xl font-bold tracking-tighter" id="modalValueDisplay">0</p>
-                                    <p class="text-xs font-medium text-slate-400 mt-2">Vendas Realizadas</p>
-                                </div>
-                                
-                                <!-- Container de Feedback -->
-                                <div id="modalFeedbackContainer" class="mt-6 border-t border-slate-100 pt-4 text-left hidden">
-                                    <!-- Aumentei o texto base, o espaçamento vertical e o padding para facilitar a leitura -->
-                                    <div id="modalFeedbackContent" class="text-base text-slate-600 space-y-4 bg-slate-50 p-5 rounded-lg leading-relaxed">
-                                        <!-- Feedback Inserido via JS -->
-                                    </div>
+        <!-- Wrapper Centralizador (Capturamos o clique aqui também) -->
+        <div id="modalWrapper" class="fixed inset-0 z-10 w-screen overflow-y-auto flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <!-- Painel Branco do Modal -->
+            <div id="modalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg modal-enter opacity-0 scale-95">
+                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-8">
+                    <div class="sm:flex sm:items-start sm:justify-center">
+                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-center w-full">
+                            <!-- Conteúdo Dinâmico -->
+                            <h3 class="text-base font-semibold leading-6 text-slate-400 uppercase tracking-widest" id="modalStoreName">LOJA</h3>
+                            <div class="mt-4">
+                                <p class="text-sm text-slate-500 mb-1" id="modalDateLabel">Mês/Ano</p>
+                                <p class="text-6xl font-bold tracking-tighter" id="modalValueDisplay">0</p>
+                                <p class="text-xs font-medium text-slate-400 mt-2">Vendas Realizadas</p>
+                            </div>
+                            
+                            <!-- Container de Feedback -->
+                            <div id="modalFeedbackContainer" class="mt-6 border-t border-slate-100 pt-4 text-left hidden">
+                                <div id="modalFeedbackContent" class="text-base text-slate-600 space-y-4 bg-slate-50 p-5 rounded-lg leading-relaxed">
+                                    <!-- Feedback Inserido via JS -->
                                 </div>
                             </div>
+                            
+                            <p class="text-[10px] text-slate-400 mt-6 italic">Clique fora desta janela para fechar</p>
                         </div>
-                    </div>
-                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:justify-center sm:px-6">
-                        <button type="button" id="closeModalBtn" class="inline-flex w-full justify-center rounded-md bg-white px-8 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:w-auto">Fechar</button>
                     </div>
                 </div>
             </div>
@@ -210,7 +207,6 @@
         let chartLabels = [];
 
         // TEXTOS DE FEEDBACK
-        // Atualizei as classes CSS dentro das strings HTML para aumentar o texto (text-base, text-lg) e o espaçamento.
         const DOM_PEDRO_TEXT = `
             <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Dom Pedro (Meta: 135 | Realizado: 118)</p>
             <div class="space-y-3">
@@ -268,14 +264,11 @@
         `;
 
         const FEEDBACK_DATA = {
-            // Chaves para Fev/26 (Data correta)
             'DOM PEDRO-Fev/26': DOM_PEDRO_TEXT,
             'KASSOUF-Fev/26': KASSOUF_TEXT,
             'REALME-Fev/26': REALME_TEXT,
             'PREMIUM-Fev/26': PREMIUM_TEXT,
             'XV-Fev/26': XV_TEXT,
-
-            // Chaves para Jan/26 (Caso o rótulo esteja a aparecer como Jan/26 por qualquer motivo)
             'DOM PEDRO-Jan/26': DOM_PEDRO_TEXT,
             'KASSOUF-Jan/26': KASSOUF_TEXT,
             'REALME-Jan/26': REALME_TEXT,
@@ -286,23 +279,22 @@
         // Elementos do Modal
         const modal = document.getElementById('detailModal');
         const modalBackdrop = document.getElementById('modalBackdrop');
+        const modalWrapper = document.getElementById('modalWrapper');
         const modalPanel = document.getElementById('modalPanel');
         const modalStoreName = document.getElementById('modalStoreName');
         const modalDateLabel = document.getElementById('modalDateLabel');
         const modalValueDisplay = document.getElementById('modalValueDisplay');
         const modalFeedbackContainer = document.getElementById('modalFeedbackContainer');
         const modalFeedbackContent = document.getElementById('modalFeedbackContent');
-        const closeModalBtn = document.getElementById('closeModalBtn');
 
         // Funções do Modal
         function openModal(store, date, value, color) {
             modalStoreName.textContent = store;
-            modalStoreName.style.color = color; // Usa a cor da loja
+            modalStoreName.style.color = color;
             modalDateLabel.textContent = date;
             modalValueDisplay.textContent = formatNumber(value);
-            modalValueDisplay.style.color = color; // Usa a cor da loja para o número grande
+            modalValueDisplay.style.color = color;
 
-            // Lógica de Feedback
             const feedbackKey = `${store}-${date}`;
             const feedbackHTML = FEEDBACK_DATA[feedbackKey];
 
@@ -316,7 +308,6 @@
 
             modal.classList.remove('hidden');
             
-            // Pequeno delay para permitir a transição CSS
             setTimeout(() => {
                 modalBackdrop.classList.remove('opacity-0');
                 modalPanel.classList.remove('opacity-0', 'scale-95');
@@ -329,22 +320,27 @@
             modalPanel.classList.remove('opacity-100', 'scale-100');
             modalPanel.classList.add('opacity-0', 'scale-95');
 
-            // Espera a animação acabar para esconder
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);
         }
 
-        // Event Listeners do Modal
-        closeModalBtn.addEventListener('click', closeModal);
-        modalBackdrop.addEventListener('click', closeModal);
+        // Lógica de Fechamento corrigida:
+        // Clicar no wrapper (área fora do modalPanel) fecha o modal
+        modalWrapper.addEventListener('click', (e) => {
+            // Se o alvo do clique for o próprio wrapper (e não o painel branco interno)
+            if (e.target === modalWrapper) {
+                closeModal();
+            }
+        });
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
                 closeModal();
             }
         });
 
-        // --- PLUGIN: LINHAS DE META (Estilo Refinado) ---
+        // --- PLUGIN: LINHAS DE META ---
         const targetLinesPlugin = {
             id: 'targetLines',
             beforeDraw: (chart) => {
@@ -356,8 +352,6 @@
                 ctx.save();
                 targetLines.forEach(line => {
                     const yPosition = y.getPixelForValue(line.value);
-
-                    // Linha
                     ctx.strokeStyle = line.color || '#94a3b8';
                     ctx.lineWidth = line.width || 1;
                     ctx.setLineDash(line.dash || [4, 4]);
@@ -367,18 +361,13 @@
                     ctx.lineTo(right, yPosition);
                     ctx.stroke();
 
-                    // Se não houver texto definido, não desenha nada além da linha
                     if (!line.label) return;
 
-                    // Label (Tag na esquerda)
-                    ctx.fillStyle = line.labelBg || line.color;
-                    ctx.font = 'bold 10px Inter';
-                    const text = line.label;
-                    
                     ctx.fillStyle = line.color;
+                    ctx.font = 'bold 10px Inter';
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'bottom';
-                    ctx.fillText(text, left, yPosition - 4);
+                    ctx.fillText(line.label, left, yPosition - 4);
                 });
                 ctx.restore();
             }
@@ -387,23 +376,19 @@
         Chart.register(targetLinesPlugin);
         if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
 
-        // --- CONFIGURAÇÃO DE CORES (Paleta Profissional) ---
-        // Cores ajustadas para serem menos saturadas e mais elegantes
         const STORE_CONFIG = {
-            'MI PLACE KASSOUF':   { color: '#F97316', borderColor: '#EA580C' }, // Orange-500/600
-            'MI PLACE XV':        { color: '#334155', borderColor: '#0F172A' }, // Slate-700/900 (Preto Suave)
-            'MI PLACE DOM PEDRO': { color: '#3B82F6', borderColor: '#2563EB' }, // Blue-500/600
-            'MI PLACE REALME':    { color: '#EAB308', borderColor: '#CA8A04' }, // Yellow-500/Darker
-            'MI PLACE PREMIUM':   { color: '#A855F7', borderColor: '#7C3AED' }  // Purple-500/600
+            'MI PLACE KASSOUF':   { color: '#F97316', borderColor: '#EA580C' },
+            'MI PLACE XV':        { color: '#334155', borderColor: '#0F172A' },
+            'MI PLACE DOM PEDRO': { color: '#3B82F6', borderColor: '#2563EB' },
+            'MI PLACE REALME':    { color: '#EAB308', borderColor: '#CA8A04' },
+            'MI PLACE PREMIUM':   { color: '#A855F7', borderColor: '#7C3AED' }
         };
         const allStoreNames = Object.keys(STORE_CONFIG);
 
-        // Formatadores
         const getFormattedDate = (dateStr) => {
             if (!dateStr) return '-';
             const parts = dateStr.split('-');
             if (parts.length !== 3) return '-';
-            // Data Local para evitar UTC offsets
             const date = new Date(parts[0], parts[1] - 1, parts[2]);
             if (isNaN(date.getTime())) return '-';
             const month = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
@@ -416,84 +401,62 @@
             return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(num);
         };
 
-        // Lógica de Negócio
         const updateSummaryMetrics = (data) => {
             let totalSales = 0;
             const numMonths = data.length;
-
             data.forEach(row => {
                 allStoreNames.forEach(store => {
                     const sales = parseFloat(row[store]);
                     if (!isNaN(sales)) totalSales += sales;
                 });
             });
-
             const averageSales = numMonths > 0 ? totalSales / numMonths : 0;
-            
-            // Animação simples de contagem (opcional, aqui direto)
             document.getElementById('totalSales').textContent = formatNumber(totalSales);
             document.getElementById('averageSales').textContent = formatNumber(averageSales, 1);
         };
         
-        // --- FUNÇÃO PARA MANIPULAR HOVER (Spotlight Effect - Versão Reforçada) ---
         const handleHoverEffect = (activeElements, chart) => {
             if (!chart) return;
-
             const isHovering = activeElements.length > 0;
             const activeIndex = isHovering ? activeElements[0].datasetIndex : -1;
-            const greyColor = '#cbd5e1'; // Cor cinza para inativos (Slate-300)
+            const greyColor = '#cbd5e1';
             
             chart.data.datasets.forEach((dataset, idx) => {
-                // Prevenção de erro: assegura que datalabels existe
                 dataset.datalabels = dataset.datalabels || {};
-
                 if (isHovering) {
                     if (idx === activeIndex) {
-                        // === ESTADO ATIVO (SPOTLIGHT) ===
                         dataset.borderColor = dataset.originalBorderColor;
                         dataset.borderWidth = 4;
-                        
-                        // Restaurar cores das bolinhas ativas
                         dataset.pointRadius = 6; 
                         dataset.pointBorderColor = dataset.originalBorderColor; 
                         dataset.pointBackgroundColor = '#ffffff';
                         dataset.pointHoverRadius = 8;
                         dataset.pointHoverBorderColor = dataset.originalBorderColor;
-                        
                         dataset.datalabels.display = 'auto';
                         dataset.order = 1; 
                     } else {
-                        // === ESTADO INATIVO (CINZA APAGADO) ===
                         dataset.borderColor = greyColor;
                         dataset.borderWidth = 2;
-                        
-                        // FORÇAR AS BOLINHAS A SEREM CINZAS
                         dataset.pointRadius = 4;
-                        dataset.pointBorderColor = greyColor;       // Borda cinza
-                        dataset.pointBackgroundColor = '#ffffff';   // Fundo branco
-                        dataset.pointHoverRadius = 4;               // Sem aumento no hover se inativo
-                        dataset.pointHoverBorderColor = greyColor;  // Prevenir cor no hover acidental
-                        
+                        dataset.pointBorderColor = greyColor;
+                        dataset.pointBackgroundColor = '#ffffff';
+                        dataset.pointHoverRadius = 4;
+                        dataset.pointHoverBorderColor = greyColor;
                         dataset.datalabels.display = false;
                         dataset.order = 10;
                     }
                 } else {
-                    // === ESTADO PADRÃO (SEM HOVER) ===
                     dataset.borderColor = dataset.originalBorderColor;
                     dataset.borderWidth = 2.5;
-                    
                     dataset.pointRadius = 6;
                     dataset.pointBorderColor = dataset.originalBorderColor;
                     dataset.pointBackgroundColor = '#ffffff';
                     dataset.pointHoverRadius = 8;
                     dataset.pointHoverBorderColor = dataset.originalBorderColor;
-                    
                     dataset.datalabels.display = 'auto';
                     dataset.order = 0;
                 }
             });
-            
-            // Força a atualização de todos os estilos (sem 'none' para garantir redesenho)
             chart.update(); 
         };
 
@@ -503,43 +466,31 @@
             const datasets = allStoreNames.map(store => {
                 const config = STORE_CONFIG[store];
                 return {
-                    label: store.replace('MI PLACE ', ''), // Remove prefixo para limpar a legenda
+                    label: store.replace('MI PLACE ', ''),
                     data: allValidData.map(row => {
                         const val = parseFloat(row[store]);
                         return isNaN(val) ? null : val;
                     }),
-                    // Guardamos as cores originais no objeto para recuperar no hover
                     originalBorderColor: config.borderColor, 
                     originalBackgroundColor: config.color,
-                    
                     borderColor: config.borderColor,
                     backgroundColor: config.color,
-                    tension: 0.35, // Curva um pouco mais suave
+                    tension: 0.35,
                     fill: false,
-                    
-                    // Configuração inicial dos pontos
                     pointRadius: 6,
-                    pointHoverRadius: 8, // Ligeiro aumento no hover individual
-                    hitRadius: 30, // Margem grande para detetar o hover facilmente
+                    pointHoverRadius: 8,
+                    hitRadius: 30,
                     pointBackgroundColor: '#ffffff',
                     pointBorderColor: config.borderColor,
                     pointBorderWidth: 2,
                     borderWidth: 2.5,
-                    
-                    // Inicialização explícita para evitar erros
-                    datalabels: {
-                        display: 'auto'
-                    }
+                    datalabels: { display: 'auto' }
                 };
             });
             
             const ctx = document.getElementById('salesChart').getContext('2d');
-            
-            if (salesChartInstance) {
-                salesChartInstance.destroy();
-            }
+            if (salesChartInstance) salesChartInstance.destroy();
 
-            // Defaults globais do Chart.js para fonte
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#64748b';
 
@@ -550,54 +501,35 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: {
-                        mode: 'nearest', // Destaca o elemento mais próximo
-                        intersect: true, // APENAS quando passa por cima (não na coluna inteira)
+                        mode: 'nearest',
+                        intersect: true,
                         axis: 'xy'
                     },
-                    // --- EVENTO DE CLIQUE (Zoom/Modal) ---
                     onClick: (event, elements, chart) => {
                         if (!elements.length) return;
-
                         const element = elements[0];
                         const datasetIndex = element.datasetIndex;
                         const index = element.index;
-                        
-                        // Recupera os dados do ponto clicado
                         const dataset = chart.data.datasets[datasetIndex];
-                        const storeName = dataset.label;
-                        const value = dataset.data[index];
-                        const dateLabel = chart.data.labels[index];
-                        // Usa a cor original da marca guardada no dataset
-                        const color = dataset.originalBackgroundColor;
-
-                        if (value !== null) {
-                            openModal(storeName, dateLabel, value, color);
+                        if (dataset.data[index] !== null) {
+                            openModal(dataset.label, chart.data.labels[index], dataset.data[index], dataset.originalBackgroundColor);
                         }
                     },
-                    // Eventos de Hover Personalizados
                     onHover: (event, activeElements, chart) => {
-                        // Muda cursor para pointer se estiver sobre um ponto
                         event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
                         handleHoverEffect(activeElements, chart);
                     },
-                    layout: {
-                        padding: { top: 20, right: 30, left: 10, bottom: 0 }
-                    },
+                    layout: { padding: { top: 20, right: 30, left: 10, bottom: 0 } },
                     plugins: {
                         legend: {
                             display: true,
                             position: 'top',
                             align: 'end',
-                            // Adicionar efeito de hover também na legenda
-                            onHover: function(event, legendItem, legend) {
-                                const index = legendItem.datasetIndex;
-                                const chart = legend.chart;
-                                event.native.target.style.cursor = 'pointer'; // Cursor mãozinha na legenda
-                                // Simula o array de elementos ativos usando o índice da legenda
-                                const fakeActiveElements = [{ datasetIndex: index }];
-                                handleHoverEffect(fakeActiveElements, chart);
+                            onHover: (event, legendItem, legend) => {
+                                event.native.target.style.cursor = 'pointer';
+                                handleHoverEffect([{ datasetIndex: legendItem.datasetIndex }], legend.chart);
                             },
-                            onLeave: function(event, legendItem, legend) {
+                            onLeave: (event, legendItem, legend) => {
                                 event.native.target.style.cursor = 'default';
                                 handleHoverEffect([], legend.chart);
                             },
@@ -606,20 +538,16 @@
                                 boxWidth: 8,
                                 padding: 20,
                                 font: { size: 11, weight: 500 },
-                                color: '#475569',
-                                // FIX: Gerar etiquetas fixas para evitar "tremer"
-                                generateLabels: (chart) => {
-                                    return chart.data.datasets.map((dataset, i) => ({
-                                        text: dataset.label,
-                                        fillStyle: dataset.originalBackgroundColor, // Usa sempre a cor original
-                                        strokeStyle: dataset.originalBorderColor,   // Usa sempre a cor original
-                                        lineWidth: 2,
-                                        hidden: !chart.isDatasetVisible(i),
-                                        index: i,
-                                        datasetIndex: i,
-                                        pointStyle: 'circle'
-                                    }));
-                                }
+                                generateLabels: (chart) => chart.data.datasets.map((dataset, i) => ({
+                                    text: dataset.label,
+                                    fillStyle: dataset.originalBackgroundColor,
+                                    strokeStyle: dataset.originalBorderColor,
+                                    lineWidth: 2,
+                                    hidden: !chart.isDatasetVisible(i),
+                                    index: i,
+                                    datasetIndex: i,
+                                    pointStyle: 'circle'
+                                }))
                             }
                         },
                         tooltip: {
@@ -631,12 +559,8 @@
                             padding: 12,
                             boxPadding: 6,
                             usePointStyle: true,
-                            titleFont: { size: 13, weight: 'bold' },
-                            bodyFont: { size: 12 },
-                            cornerRadius: 8,
-                            displayColors: true,
                             callbacks: {
-                                label: function(context) {
+                                label: (context) => {
                                     let label = context.dataset.label || '';
                                     if (label) label += ': ';
                                     if (context.parsed.y !== null) label += formatNumber(context.parsed.y);
@@ -648,16 +572,10 @@
                             align: 'top',
                             anchor: 'end',
                             offset: 4,
-                            // Usa a cor da borda atual (que pode ser cinza no hover)
-                            color: function(ctx) { return ctx.dataset.borderColor },
+                            color: (ctx) => ctx.dataset.borderColor,
                             font: { weight: 'bold', size: 9 },
                             formatter: (val) => val !== null ? Math.round(val) : '',
-                            display: function(context) {
-                                // Lê diretamente da propriedade que manipulamos no hover
-                                return context.dataset.datalabels && context.dataset.datalabels.display !== undefined 
-                                    ? context.dataset.datalabels.display 
-                                    : 'auto';
-                            }
+                            display: (context) => context.dataset.datalabels?.display ?? 'auto'
                         },
                         targetLines: {
                             lines: [
@@ -667,40 +585,25 @@
                         }
                     },
                     scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 11 }, color: '#64748b' },
-                            border: { display: false }
-                        },
+                        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' }, border: { display: false } },
                         y: {
                             beginAtZero: true,
                             max: 300,
                             border: { display: false },
-                            grid: {
-                                color: '#f1f5f9',
-                                borderDash: [4, 4],
-                                tickLength: 0
-                            },
-                            ticks: {
-                                stepSize: 50,
-                                padding: 10,
-                                font: { size: 11 },
-                                color: '#94a3b8'
-                            }
+                            grid: { color: '#f1f5f9', borderDash: [4, 4], tickLength: 0 },
+                            ticks: { stepSize: 50, padding: 10, font: { size: 11 }, color: '#94a3b8' }
                         }
                     }
                 }
             });
         };
 
-        // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             const loadingIndicator = document.getElementById('loadingIndicator');
             const chartContainer = document.getElementById('chartContainer');
             const errorMessage = document.getElementById('errorMessage');
 
             try {
-                // CSV DATA (Incluindo Fev/26 conforme solicitado)
                 const csvData = `MES,MI PLACE KASSOUF,MI PLACE XV,MI PLACE DOM PEDRO,MI PLACE REALME,MI PLACE PREMIUM
 2024-07-01,107,104,,57,
 2024-08-01,113,90,132,57,
@@ -723,31 +626,20 @@
 2026-01-01,46,56,151,55,67
 2026-02-01,66,35,118,55,41`;
 
-                // Parser CSV Simplificado
                 const lines = csvData.trim().split('\n');
                 const headers = lines[0].split(',').map(h => h.trim()); 
-                
                 const parsedData = lines.slice(1).map(line => {
                     const values = line.split(',').map(v => v.trim());
-                    return headers.reduce((acc, header, index) => {
-                        const val = values[index];
-                        acc[header] = (val === '' || val === undefined) ? null : val;
-                        return acc;
-                    }, {});
+                    return headers.reduce((acc, h, i) => (acc[h] = values[i] || null, acc), {});
                 });
 
                 allValidData = parsedData.filter(row => row.MES); 
                 chartLabels = allValidData.map(row => getFormattedDate(row.MES));
-
-                // Atualizar UI
                 updateSummaryMetrics(allValidData);
                 renderChart();
-
                 loadingIndicator.classList.add('hidden');
                 chartContainer.classList.remove('hidden');
-
             } catch (error) {
-                console.error(error);
                 loadingIndicator.classList.add('hidden');
                 errorMessage.classList.remove('hidden');
                 document.getElementById('errorText').textContent = error.message;
