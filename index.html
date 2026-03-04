@@ -1,54 +1,173 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Performance de Vendas por Loja</title>
-    <!-- Inclui o Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inclui a biblioteca Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <!-- Inclui o plugin Datalabels -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <!-- Fonte Inter do Google Fonts para garantir renderização correta -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        slate: {
-                            50: '#f8fafc',
-                            100: '#f1f5f9',
-                            200: '#e2e8f0',
-                            300: '#cbd5e1',
-                            400: '#94a3b8',
-                            500: '#64748b',
-                            600: '#475569',
-                            700: '#334155',
-                            800: '#1e293b',
-                            900: '#0f172a',
-                        }
-                    }
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
         }
     </script>
 
     <style>
-        body {
-            background-color: #f1f5f9; /* Slate 100 - Fundo corporativo claro */
+        * {
+            box-sizing: border-box;
         }
+
+        body {
+            background: linear-gradient(135deg, #e8edf5 0%, #f1f5f9 50%, #e2e8f3 100%);
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 20px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .dashboard-header h1 {
+            color: #fff;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin: 0;
+        }
+
+        .dashboard-header p {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin: 4px 0 0;
+        }
+
+        .badge-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 999px;
+            backdrop-filter: blur(8px);
+        }
+
+        .badge-live .dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1);
+            }
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .kpi-card {
+            padding: 28px;
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            transition: background 0.2s;
+        }
+
+        .kpi-card:not(:last-child) {
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .kpi-card:hover {
+            background: #f8fafc;
+        }
+
+        .kpi-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .kpi-icon.blue {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #2563eb;
+        }
+
+        .kpi-icon.green {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #059669;
+        }
+
+        .kpi-value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.04em;
+            line-height: 1;
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .kpi-sub {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .main-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
         .chart-container {
             position: relative;
-            height: 650px; /* Altura aumentada para expandir o campo de visão */
+            height: 680px;
             width: 100%;
         }
-        /* Loader minimalista */
+
         .loader {
             width: 48px;
             height: 48px;
@@ -56,141 +175,142 @@
             border-bottom-color: #3b82f6;
             border-radius: 50%;
             display: inline-block;
-            box-sizing: border-box;
             animation: rotation 1s linear infinite;
         }
+
         @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
         }
-        /* Animações do Modal */
-        .modal-enter {
-            opacity: 0;
-            transform: scale(0.95);
+
+        .card-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.72rem;
+            color: #94a3b8;
         }
-        .modal-enter-active {
-            opacity: 1;
-            transform: scale(1);
-            transition: opacity 300ms ease-out, transform 300ms ease-out;
-        }
-        .modal-exit {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .modal-exit-active {
-            opacity: 0;
-            transform: scale(0.95);
-            transition: opacity 200ms ease-in, transform 200ms ease-in;
+
+        @media(max-width:640px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-card:not(:last-child) {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .chart-container {
+                height: 420px;
+            }
         }
     </style>
 </head>
+
 <body class="text-slate-800 antialiased p-4 md:p-8">
 
-    <!-- Header Principal -->
-    <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-                Dashboard de Vendas
-            </h1>
-            <p class="text-slate-500 text-sm mt-1">
-                Rede Mi Place • Acompanhamento Mensal
-            </p>
-        </div>
-        <div class="mt-4 md:mt-0">
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white text-slate-600 border border-slate-200 shadow-sm">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                Atualizado em tempo real
-            </span>
+    <div class="max-w-7xl mx-auto">
+        <div class="dashboard-header">
+            <div>
+                <h1>Dashboard de Vendas</h1>
+                <p>Rede Mi Place &nbsp;&bull;&nbsp; Acompanhamento Mensal</p>
+            </div>
+            <span class="badge-live"><span class="dot"></span>Dados Atualizados</span>
         </div>
     </div>
 
-    <!-- Container Principal (Card Branco) -->
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
-        
-        <!-- KPIs / Cards de Resumo -->
-        <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 border-b border-slate-100">
-            <!-- Card 1 -->
-            <div class="p-6 flex items-start space-x-4">
-                <div class="p-3 rounded-lg bg-blue-50 text-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    <div class="max-w-7xl mx-auto main-card">
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon blue">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-slate-500">Total de Vendas Acumulado</p>
-                    <p id="totalSales" class="text-3xl font-bold text-slate-900 mt-1">--</p>
-                    <p class="text-xs text-slate-400 mt-1">Período completo</p>
+                    <p class="kpi-label">Total Acumulado</p>
+                    <p id="totalSales" class="kpi-value">--</p>
+                    <p class="kpi-sub">Vendas no período completo</p>
                 </div>
             </div>
-
-            <!-- Card 2 -->
-            <div class="p-6 flex items-start space-x-4">
-                <div class="p-3 rounded-lg bg-emerald-50 text-emerald-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            <div class="kpi-card">
+                <div class="kpi-icon green">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm font-medium text-slate-500">Média Mensal da Rede</p>
-                    <p id="averageSales" class="text-3xl font-bold text-slate-900 mt-1">--</p>
-                    <p class="text-xs text-slate-400 mt-1">Vendas / Mês</p>
+                    <p class="kpi-label">Média Mensal da Rede</p>
+                    <p id="averageSales" class="kpi-value">--</p>
+                    <p class="kpi-sub">Vendas por mês</p>
                 </div>
             </div>
         </div>
 
-        <!-- Área do Gráfico -->
+        <!-- Gráfico -->
         <div class="p-6 md:p-8 relative">
-            <!-- Loading -->
             <div id="loadingIndicator" class="flex flex-col justify-center items-center h-80">
                 <span class="loader mb-4"></span>
                 <p class="text-slate-500 text-sm font-medium">Processando dados...</p>
             </div>
-
-            <!-- Gráfico -->
             <div id="chartContainer" class="chart-container hidden">
                 <canvas id="salesChart"></canvas>
             </div>
-
-            <!-- Erro -->
-            <div id="errorMessage" class="hidden p-4 mb-4 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200" role="alert">
+            <div id="errorMessage"
+                class="hidden p-4 mb-4 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200" role="alert">
                 <span class="font-medium">Erro ao carregar dados:</span> <span id="errorText"></span>
             </div>
         </div>
-        
-        <!-- Footer do Card -->
-        <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
-            <span>Dados de performance interna</span>
-            <span>Mi Place Analytics</span>
+
+        <div class="card-footer">
+            <span>&#9632; Dados de performance interna &mdash; Mi Place</span>
+            <span>Analytics by Dark Morellato</span>
         </div>
     </div>
 
-    <!-- MODAL DE DETALHES -->
-    <div id="detailModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <!-- Backdrop (Fundo Escurecido) -->
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop"></div>
-
-        <!-- Wrapper Centralizador (Capturamos o clique aqui também) -->
-        <div id="modalWrapper" class="fixed inset-0 z-10 w-screen overflow-y-auto flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <!-- Painel Branco do Modal -->
-            <div id="modalPanel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg modal-enter opacity-0 scale-95">
+    <!-- MODAL -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+        <div id="modalBackdrop" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0">
+        </div>
+        <div id="modalWrapper"
+            class="fixed inset-0 z-10 w-screen overflow-y-auto flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div id="modalPanel"
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 scale-95">
                 <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-8">
                     <div class="sm:flex sm:items-start sm:justify-center">
                         <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-center w-full">
-                            <!-- Conteúdo Dinâmico -->
-                            <h3 class="text-base font-semibold leading-6 text-slate-400 uppercase tracking-widest" id="modalStoreName">LOJA</h3>
+                            <h3 class="text-base font-semibold leading-6 text-slate-400 uppercase tracking-widest"
+                                id="modalStoreName">LOJA</h3>
                             <div class="mt-4">
                                 <p class="text-sm text-slate-500 mb-1" id="modalDateLabel">Mês/Ano</p>
                                 <p class="text-6xl font-bold tracking-tighter" id="modalValueDisplay">0</p>
                                 <p class="text-xs font-medium text-slate-400 mt-2">Vendas Realizadas</p>
                             </div>
-                            
-                            <!-- Container de Feedback -->
-                            <div id="modalFeedbackContainer" class="mt-6 border-t border-slate-100 pt-4 text-left hidden">
-                                <div id="modalFeedbackContent" class="text-base text-slate-600 space-y-4 bg-slate-50 p-5 rounded-lg leading-relaxed">
-                                    <!-- Feedback Inserido via JS -->
+                            <div id="modalFeedbackContainer"
+                                class="mt-6 border-t border-slate-100 pt-4 text-left hidden">
+                                <div id="modalFeedbackContent"
+                                    class="text-base text-slate-600 space-y-4 bg-slate-50 p-5 rounded-lg leading-relaxed">
                                 </div>
                             </div>
-                            
                             <p class="text-[10px] text-slate-400 mt-6 italic">Clique fora desta janela para fechar</p>
                         </div>
                     </div>
@@ -199,84 +319,141 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
     <script>
-        // Variáveis globais
         let salesChartInstance = null;
-        let allValidData = []; 
+        let allValidData = [];
         let chartLabels = [];
 
-        // TEXTOS DE FEEDBACK
-        const DOM_PEDRO_TEXT = `
-            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Dom Pedro (Meta: 135 | Realizado: 118)</p>
-            <div class="space-y-3">
-                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Não Atingiu a Meta</span></p>
-                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 151 &rarr; 118 (-21,8% de retração)</p>
-                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
-                    <strong>Feedback:</strong><br/>
-                    A unidade vinha de um dezembro excepcional (151 vendas, superando a meta), mas sofreu uma desaceleração considerável em janeiro. Embora ainda mantenha o maior volume absoluto da rede, a perda de 33 vendas de um mês para o outro indica que a loja não conseguiu sustentar o fluxo pós-férias. Vamos manter o foco neste mês de Fevereiro equipe!
-                </div>
-            </div>
-        `;
-        const KASSOUF_TEXT = `
-            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Kassouf (Meta: 65 | Realizado: 66)</p>
-            <div class="space-y-3">
-                <p class="text-base"><strong>Status:</strong> <span class="text-emerald-600 font-bold">Meta Atingida</span> (Única loja a atingir o objetivo)</p>
-                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 46 &rarr; 66 (+43% de crescimento)</p>
-                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-emerald-300 pl-4 py-1 leading-relaxed">
-                    <strong>Feedback:</strong><br/>
-                    A unidade é o destaque positivo do mês. Ao contrário do restante da rede, a Kassouf reverteu o resultado ruim de dezembro 2025 (46 vendas) e acelerou fortemente em janeiro, superando a barreira das 65 unidades. Demonstrou excelente capacidade de recuperação a curto prazo. Parabéns Equipe!
-                </div>
-            </div>
-        `;
-        const REALME_TEXT = `
-            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Realme (Meta: 65 | Realizado: 55)</p>
-            <div class="space-y-3">
-                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Não Atingiu a Meta</span></p>
-                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 55 &rarr; 55 (Estagnado)</p>
-                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
-                    <strong>Feedback:</strong><br/>
-                    A unidade mostra estagnação em um patamar satisfatório. Não houve piora (como na XV ou Premium), mas também não houve reação. Esse resultado consolida uma tendência de média performance que precisa ser revertida em março, pois sabemos da capacidade da equipe. Isso mostra que a equipe está pronta para decolar nos próximos meses.
-                </div>
-            </div>
-        `;
-        const PREMIUM_TEXT = `
-            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place Premium (Meta: 65 | Realizado: 41)</p>
-            <div class="space-y-3">
-                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Não Atingiu a Meta</span></p>
-                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 67 &rarr; 41 (-38,8% de retração)</p>
-                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
-                    <strong>Feedback:</strong><br/>
-                    A unidade apresentou a oscilação mais negativa da rede. Saiu de um status de "Meta Batida" em dezembro 2025 (67 vendas) para um resultado muito abaixo do esperado em janeiro. Essa volatilidade alta prejudica a previsibilidade de receita da loja. Vamos trabalhar para se manter na meta como sempre foi feito!
-                </div>
-            </div>
-        `;
-        const XV_TEXT = `
-            <p class="font-bold text-slate-900 mb-2 text-lg">Mi Place XV (Meta: 65 | Realizado: 35)</p>
-            <div class="space-y-3">
-                <p class="text-base"><strong>Status:</strong> <span class="text-red-600 font-bold">Crítico</span></p>
-                <p class="text-base"><strong>Evolução (Jan &rarr; Fev):</strong> 56 &rarr; 35 (-37,5% de retração)</p>
-                <div class="mt-4 text-slate-600 text-base italic border-l-4 border-red-300 pl-4 py-1 leading-relaxed">
-                    <strong>Feedback:</strong><br/>
-                    Situação alarmante. Em dezembro, a loja estava próxima da meta (56), mas em janeiro o desempenho colapsou para quase metade do objetivo (35). É o pior resultado da unidade em todo o histórico recente, exigindo diagnóstico imediato. É hora de seguir as recomendaçõe da Jack para reverter o resultado e mudar esse cenário!
-                </div>
-            </div>
-        `;
+        // ── GERADOR DINÂMICO DE FEEDBACK ──────────────────────────────────────
 
-        const FEEDBACK_DATA = {
-            'DOM PEDRO-Fev/26': DOM_PEDRO_TEXT,
-            'KASSOUF-Fev/26': KASSOUF_TEXT,
-            'REALME-Fev/26': REALME_TEXT,
-            'PREMIUM-Fev/26': PREMIUM_TEXT,
-            'XV-Fev/26': XV_TEXT,
-            'DOM PEDRO-Jan/26': DOM_PEDRO_TEXT,
-            'KASSOUF-Jan/26': KASSOUF_TEXT,
-            'REALME-Jan/26': REALME_TEXT,
-            'PREMIUM-Jan/26': PREMIUM_TEXT,
-            'XV-Jan/26': XV_TEXT
+        const STORE_META = {
+            'DOM PEDRO': 130,
+            'KASSOUF': 65,
+            'XV': 65,
+            'REALME': 65,
+            'PREMIUM': 65
         };
 
-        // Elementos do Modal
+        const STORE_KEY_MAP = {
+            'DOM PEDRO': 'MI PLACE DOM PEDRO',
+            'KASSOUF': 'MI PLACE KASSOUF',
+            'XV': 'MI PLACE XV',
+            'REALME': 'MI PLACE REALME',
+            'PREMIUM': 'MI PLACE PREMIUM'
+        };
+
+        function storeDisplayName(store) {
+            if (store === 'DOM PEDRO') return 'Mi Place Dom Pedro';
+            return 'Mi Place ' + store.charAt(0) + store.slice(1).toLowerCase();
+        }
+
+        function buildNarrative(store, date, value, meta, achievement, prevValue, prevDate, delta) {
+            const n = storeDisplayName(store);
+            const gap = meta - value;
+
+            if (achievement >= 100) {
+                if (delta !== null && delta > 0)
+                    return `A unidade ${n} registrou desempenho positivo em ${date}, superando a meta estabelecida com ${value} vendas — ${achievement.toFixed(1)}% do objetivo. O crescimento de ${delta.toFixed(1)}% em relação ao período anterior reforça a consistência da equipe e a eficácia das estratégias aplicadas. Este resultado contribui para a solidez dos números da rede e serve como referência para as demais unidades. Recomenda-se manter o ritmo e aprimorar as práticas que conduziram a este resultado.`;
+                return `A unidade ${n} atingiu e superou a meta em ${date}, totalizando ${value} vendas — ${achievement.toFixed(1)}% do objetivo. Este resultado demonstra o comprometimento da equipe com os objetivos da rede. Parabenizamos toda a equipe e recomendamos manter a consistência operacional para os próximos períodos.`;
+            }
+
+            if (achievement >= 85) {
+                if (delta !== null && delta > 0)
+                    return `A unidade ${n} ficou próxima da meta em ${date}, com ${value} vendas realizadas (${achievement.toFixed(1)}% do objetivo) — um déficit de apenas ${gap} unidades. O crescimento de ${delta.toFixed(1)}% frente ao período anterior demonstra evolução positiva e indica que a equipe está no caminho certo. Com pequenos ajustes operacionais e foco nas oportunidades de fechamento, o cumprimento integral da meta está ao alcance.`;
+                return `A unidade ${n} apresentou resultado próximo da meta em ${date}, com ${value} vendas realizadas (${achievement.toFixed(1)}% do objetivo). ${delta !== null && delta < 0 ? `A leve retração de ${Math.abs(delta).toFixed(1)}% frente ao período anterior exige atenção. R` : 'R'}ecomenda-se identificar os fatores que impediram o atingimento pleno e adotar ações corretivas para garantir o cumprimento da meta nos próximos períodos.`;
+            }
+
+            if (achievement >= 60) {
+                if (delta !== null && delta > 0)
+                    return `A unidade ${n} encerrou ${date} com ${value} vendas — atingimento de ${achievement.toFixed(1)}% da meta de ${meta} unidades. Apesar da evolução positiva de ${delta.toFixed(1)}% frente ao período anterior, o resultado ainda está significativamente aquém do objetivo. O déficit de ${gap} vendas exige ação estruturada, com metas intermediárias semanais e acompanhamento próximo dos indicadores.`;
+                return `A unidade ${n} encerrou ${date} com ${value} vendas realizadas, representando ${achievement.toFixed(1)}% da meta de ${meta} unidades. Este desempenho abaixo do esperado ${delta !== null && delta < 0 ? `— com retração de ${Math.abs(delta).toFixed(1)}% frente ao período anterior — ` : ''}exige levantamento das causas, revisão das abordagens comerciais e implementação de plano de ação estruturado com indicadores claros de acompanhamento.`;
+            }
+
+            // Crítico
+            if (delta !== null && delta > 0)
+                return `A unidade ${n} registrou em ${date} um total de ${value} vendas — atingimento de ${achievement.toFixed(1)}% da meta de ${meta} unidades. Embora a evolução de ${delta.toFixed(1)}% frente ao período anterior sinalize melhora no ritmo, o resultado absoluto ainda é crítico. O gap de ${gap} vendas é expressivo e requer intervenção estratégica, diagnóstico preciso dos gargalos operacionais e plano de recuperação com metas semanais monitoradas de perto.`;
+            return `A unidade ${n} encerrou ${date} com apenas ${value} vendas realizadas — atingimento de ${achievement.toFixed(1)}% da meta de ${meta} unidades — configurando um resultado crítico. ${delta !== null && delta < 0 ? `A retração de ${Math.abs(delta).toFixed(1)}% em relação ao período anterior agrava ainda mais o cenário. ` : ''}Esta situação exige diagnóstico aprofundado e imediato, seguido de implementação urgente de plano de recuperação com metas intermediárias claras, acompanhamento diário e envolvimento direto da liderança para reverter a trajetória.`;
+        }
+
+        function generateFeedbackHTML(store, date, value) {
+            const meta = STORE_META[store] || 65;
+            const achievement = (value / meta) * 100;
+
+            // Buscar período anterior
+            const currentIdx = chartLabels.indexOf(date);
+            let prevValue = null, prevDate = null;
+            if (currentIdx > 0) {
+                const key = STORE_KEY_MAP[store];
+                for (let i = currentIdx - 1; i >= 0; i--) {
+                    const raw = parseFloat(allValidData[i][key]);
+                    if (!isNaN(raw)) { prevValue = raw; prevDate = chartLabels[i]; break; }
+                }
+            }
+
+            const delta = prevValue !== null ? ((value - prevValue) / prevValue * 100) : null;
+            const deltaStr = delta !== null ? (delta >= 0 ? '+' : '') + delta.toFixed(1) + '%' : null;
+
+            // Cores
+            let resultBg, resultText, statusClass, borderClass, bgClass;
+            if (achievement >= 100) {
+                resultBg = 'bg-emerald-50'; resultText = 'text-emerald-700';
+                statusClass = 'text-emerald-700 font-bold';
+                borderClass = 'border-emerald-400'; bgClass = 'bg-emerald-50';
+            } else if (achievement >= 85) {
+                resultBg = 'bg-amber-50'; resultText = 'text-amber-700';
+                statusClass = 'text-amber-600 font-bold';
+                borderClass = 'border-amber-400'; bgClass = 'bg-amber-50';
+            } else if (achievement >= 60) {
+                resultBg = 'bg-orange-50'; resultText = 'text-orange-700';
+                statusClass = 'text-orange-600 font-bold';
+                borderClass = 'border-orange-400'; bgClass = 'bg-orange-50';
+            } else {
+                resultBg = 'bg-red-50'; resultText = 'text-red-700';
+                statusClass = 'text-red-700 font-bold';
+                borderClass = 'border-red-400'; bgClass = 'bg-red-50';
+            }
+
+            const deltaColor = delta === null ? 'text-slate-500'
+                : (delta >= 0 ? 'text-emerald-600 font-bold' : 'text-red-500 font-bold');
+
+            const evolutionRow = prevDate
+                ? `<div class="flex justify-between items-center bg-slate-50 rounded-lg px-4 py-2">
+                       <span class="text-sm font-semibold text-slate-600">Evolução (${prevDate} &rarr; ${date})</span>
+                       <span class="text-sm ${deltaColor}">${prevValue} &rarr; ${value}&nbsp;(${deltaStr})</span>
+                   </div>`
+                : `<div class="flex justify-between items-center bg-slate-50 rounded-lg px-4 py-2">
+                       <span class="text-sm font-semibold text-slate-600">Situação</span>
+                       <span class="text-sm text-slate-500 font-medium">Primeiro período registrado</span>
+                   </div>`;
+
+            const narrative = buildNarrative(store, date, value, meta, achievement, prevValue, prevDate, delta);
+
+            return `
+                <p class="font-bold text-slate-900 mb-1 text-lg">${storeDisplayName(store)} &mdash; ${date}</p>
+                <p class="text-xs text-slate-400 uppercase tracking-widest mb-4">Análise de Desempenho | Reunião de Equipe</p>
+                <div class="space-y-3 text-left">
+                    <div class="flex justify-between items-center bg-slate-100 rounded-lg px-4 py-2">
+                        <span class="text-sm font-semibold text-slate-600">Meta Mensal</span>
+                        <span class="text-sm font-bold text-slate-900">${meta} vendas</span>
+                    </div>
+                    <div class="flex justify-between items-center ${resultBg} rounded-lg px-4 py-2">
+                        <span class="text-sm font-semibold text-slate-600">Realizado</span>
+                        <span class="text-sm font-bold ${resultText}">${value} vendas</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-50 rounded-lg px-4 py-2">
+                        <span class="text-sm font-semibold text-slate-600">Atingimento</span>
+                        <span class="text-sm ${statusClass}">${achievement.toFixed(1)}%</span>
+                    </div>
+                    ${evolutionRow}
+                </div>
+                <div class="mt-5 text-slate-700 text-sm border-l-4 ${borderClass} pl-4 py-2 leading-relaxed ${bgClass} rounded-r-lg">
+                    <p class="font-bold text-slate-800 mb-1">Análise Formal:</p>
+                    ${narrative}
+                </div>`;
+        }
+
+        // ── MODAL ─────────────────────────────────────────────────────────────
+
         const modal = document.getElementById('detailModal');
         const modalBackdrop = document.getElementById('modalBackdrop');
         const modalWrapper = document.getElementById('modalWrapper');
@@ -287,7 +464,6 @@
         const modalFeedbackContainer = document.getElementById('modalFeedbackContainer');
         const modalFeedbackContent = document.getElementById('modalFeedbackContent');
 
-        // Funções do Modal
         function openModal(store, date, value, color) {
             modalStoreName.textContent = store;
             modalStoreName.style.color = color;
@@ -295,19 +471,10 @@
             modalValueDisplay.textContent = formatNumber(value);
             modalValueDisplay.style.color = color;
 
-            const feedbackKey = `${store}-${date}`;
-            const feedbackHTML = FEEDBACK_DATA[feedbackKey];
-
-            if (feedbackHTML) {
-                modalFeedbackContent.innerHTML = feedbackHTML;
-                modalFeedbackContainer.classList.remove('hidden');
-            } else {
-                modalFeedbackContainer.classList.add('hidden');
-                modalFeedbackContent.innerHTML = '';
-            }
+            modalFeedbackContent.innerHTML = generateFeedbackHTML(store, date, value);
+            modalFeedbackContainer.classList.remove('hidden');
 
             modal.classList.remove('hidden');
-            
             setTimeout(() => {
                 modalBackdrop.classList.remove('opacity-0');
                 modalPanel.classList.remove('opacity-0', 'scale-95');
@@ -319,55 +486,30 @@
             modalBackdrop.classList.add('opacity-0');
             modalPanel.classList.remove('opacity-100', 'scale-100');
             modalPanel.classList.add('opacity-0', 'scale-95');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
-        // Lógica de Fechamento corrigida:
-        // Clicar no wrapper (área fora do modalPanel) fecha o modal
-        modalWrapper.addEventListener('click', (e) => {
-            // Se o alvo do clique for o próprio wrapper (e não o painel branco interno)
-            if (e.target === modalWrapper) {
-                closeModal();
-            }
-        });
+        modalWrapper.addEventListener('click', (e) => { if (e.target === modalWrapper) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-                closeModal();
-            }
-        });
+        // ── PLUGIN: LINHAS DE META ────────────────────────────────────────────
 
-        // --- PLUGIN: LINHAS DE META ---
         const targetLinesPlugin = {
             id: 'targetLines',
             beforeDraw: (chart) => {
-                const { ctx, chartArea: { top, bottom, left, right }, scales: { y } } = chart;
-                const targetLines = chart.options.plugins.targetLines?.lines || [];
-
-                if (targetLines.length === 0) return;
-
+                const { ctx, chartArea: { left, right }, scales: { y } } = chart;
+                const lines = chart.options.plugins.targetLines?.lines || [];
+                if (!lines.length) return;
                 ctx.save();
-                targetLines.forEach(line => {
-                    const yPosition = y.getPixelForValue(line.value);
+                lines.forEach(line => {
+                    const yPos = y.getPixelForValue(line.value);
                     ctx.strokeStyle = line.color || '#94a3b8';
                     ctx.lineWidth = line.width || 1;
                     ctx.setLineDash(line.dash || [4, 4]);
-                    
                     ctx.beginPath();
-                    ctx.moveTo(left, yPosition);
-                    ctx.lineTo(right, yPosition);
+                    ctx.moveTo(left, yPos);
+                    ctx.lineTo(right, yPos);
                     ctx.stroke();
-
-                    if (!line.label) return;
-
-                    ctx.fillStyle = line.color;
-                    ctx.font = 'bold 10px Inter';
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'bottom';
-                    ctx.fillText(line.label, left, yPosition - 4);
                 });
                 ctx.restore();
             }
@@ -376,14 +518,18 @@
         Chart.register(targetLinesPlugin);
         if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
 
+        // ── CONFIG DAS LOJAS ─────────────────────────────────────────────────
+
         const STORE_CONFIG = {
-            'MI PLACE KASSOUF':   { color: '#F97316', borderColor: '#EA580C' },
-            'MI PLACE XV':        { color: '#334155', borderColor: '#0F172A' },
+            'MI PLACE KASSOUF': { color: '#F97316', borderColor: '#EA580C' },
+            'MI PLACE XV': { color: '#334155', borderColor: '#0F172A' },
             'MI PLACE DOM PEDRO': { color: '#3B82F6', borderColor: '#2563EB' },
-            'MI PLACE REALME':    { color: '#EAB308', borderColor: '#CA8A04' },
-            'MI PLACE PREMIUM':   { color: '#A855F7', borderColor: '#7C3AED' }
+            'MI PLACE REALME': { color: '#EAB308', borderColor: '#CA8A04' },
+            'MI PLACE PREMIUM': { color: '#A855F7', borderColor: '#7C3AED' }
         };
         const allStoreNames = Object.keys(STORE_CONFIG);
+
+        // ── UTILITÁRIOS ───────────────────────────────────────────────────────
 
         const getFormattedDate = (dateStr) => {
             if (!dateStr) return '-';
@@ -402,92 +548,69 @@
         };
 
         const updateSummaryMetrics = (data) => {
-            let totalSales = 0;
-            const numMonths = data.length;
+            let total = 0;
             data.forEach(row => {
                 allStoreNames.forEach(store => {
-                    const sales = parseFloat(row[store]);
-                    if (!isNaN(sales)) totalSales += sales;
+                    const v = parseFloat(row[store]);
+                    if (!isNaN(v)) total += v;
                 });
             });
-            const averageSales = numMonths > 0 ? totalSales / numMonths : 0;
-            document.getElementById('totalSales').textContent = formatNumber(totalSales);
-            document.getElementById('averageSales').textContent = formatNumber(averageSales, 1);
+            document.getElementById('totalSales').textContent = formatNumber(total);
+            document.getElementById('averageSales').textContent = formatNumber(data.length > 0 ? total / data.length : 0, 1);
         };
-        
+
+        // ── HOVER ─────────────────────────────────────────────────────────────
+
         const handleHoverEffect = (activeElements, chart) => {
             if (!chart) return;
             const isHovering = activeElements.length > 0;
             const activeIndex = isHovering ? activeElements[0].datasetIndex : -1;
-            const greyColor = '#cbd5e1';
-            
-            chart.data.datasets.forEach((dataset, idx) => {
-                dataset.datalabels = dataset.datalabels || {};
+            const grey = '#cbd5e1';
+            chart.data.datasets.forEach((ds, idx) => {
+                ds.datalabels = ds.datalabels || {};
                 if (isHovering) {
                     if (idx === activeIndex) {
-                        dataset.borderColor = dataset.originalBorderColor;
-                        dataset.borderWidth = 4;
-                        dataset.pointRadius = 6; 
-                        dataset.pointBorderColor = dataset.originalBorderColor; 
-                        dataset.pointBackgroundColor = '#ffffff';
-                        dataset.pointHoverRadius = 8;
-                        dataset.pointHoverBorderColor = dataset.originalBorderColor;
-                        dataset.datalabels.display = 'auto';
-                        dataset.order = 1; 
+                        ds.borderColor = ds.originalBorderColor; ds.borderWidth = 4; ds.pointRadius = 6;
+                        ds.pointBorderColor = ds.originalBorderColor; ds.pointBackgroundColor = '#fff';
+                        ds.pointHoverRadius = 8; ds.pointHoverBorderColor = ds.originalBorderColor;
+                        ds.datalabels.display = 'auto'; ds.order = 1;
                     } else {
-                        dataset.borderColor = greyColor;
-                        dataset.borderWidth = 2;
-                        dataset.pointRadius = 4;
-                        dataset.pointBorderColor = greyColor;
-                        dataset.pointBackgroundColor = '#ffffff';
-                        dataset.pointHoverRadius = 4;
-                        dataset.pointHoverBorderColor = greyColor;
-                        dataset.datalabels.display = false;
-                        dataset.order = 10;
+                        ds.borderColor = grey; ds.borderWidth = 2; ds.pointRadius = 4;
+                        ds.pointBorderColor = grey; ds.pointBackgroundColor = '#fff';
+                        ds.pointHoverRadius = 4; ds.pointHoverBorderColor = grey;
+                        ds.datalabels.display = false; ds.order = 10;
                     }
                 } else {
-                    dataset.borderColor = dataset.originalBorderColor;
-                    dataset.borderWidth = 2.5;
-                    dataset.pointRadius = 6;
-                    dataset.pointBorderColor = dataset.originalBorderColor;
-                    dataset.pointBackgroundColor = '#ffffff';
-                    dataset.pointHoverRadius = 8;
-                    dataset.pointHoverBorderColor = dataset.originalBorderColor;
-                    dataset.datalabels.display = 'auto';
-                    dataset.order = 0;
+                    ds.borderColor = ds.originalBorderColor; ds.borderWidth = 2.5; ds.pointRadius = 6;
+                    ds.pointBorderColor = ds.originalBorderColor; ds.pointBackgroundColor = '#fff';
+                    ds.pointHoverRadius = 8; ds.pointHoverBorderColor = ds.originalBorderColor;
+                    ds.datalabels.display = 'auto'; ds.order = 0;
                 }
             });
-            chart.update(); 
+            chart.update();
         };
+
+        // ── RENDER CHART ──────────────────────────────────────────────────────
 
         const renderChart = () => {
             if (!allValidData.length || !chartLabels.length) return;
 
             const datasets = allStoreNames.map(store => {
-                const config = STORE_CONFIG[store];
+                const cfg = STORE_CONFIG[store];
                 return {
                     label: store.replace('MI PLACE ', ''),
-                    data: allValidData.map(row => {
-                        const val = parseFloat(row[store]);
-                        return isNaN(val) ? null : val;
-                    }),
-                    originalBorderColor: config.borderColor, 
-                    originalBackgroundColor: config.color,
-                    borderColor: config.borderColor,
-                    backgroundColor: config.color,
-                    tension: 0.35,
-                    fill: false,
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    hitRadius: 30,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: config.borderColor,
-                    pointBorderWidth: 2,
-                    borderWidth: 2.5,
-                    datalabels: { display: 'auto' }
+                    data: allValidData.map(row => { const v = parseFloat(row[store]); return isNaN(v) ? null : v; }),
+                    originalBorderColor: cfg.borderColor,
+                    originalBackgroundColor: cfg.color,
+                    borderColor: cfg.borderColor,
+                    backgroundColor: cfg.color,
+                    tension: 0.35, fill: false,
+                    pointRadius: 6, pointHoverRadius: 8, hitRadius: 30,
+                    pointBackgroundColor: '#fff', pointBorderColor: cfg.borderColor, pointBorderWidth: 2,
+                    borderWidth: 2.5, datalabels: { display: 'auto' }
                 };
             });
-            
+
             const ctx = document.getElementById('salesChart').getContext('2d');
             if (salesChartInstance) salesChartInstance.destroy();
 
@@ -496,24 +619,16 @@
 
             salesChartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: chartLabels, datasets: datasets },
+                data: { labels: chartLabels, datasets },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'nearest',
-                        intersect: true,
-                        axis: 'xy'
-                    },
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'nearest', intersect: true, axis: 'xy' },
                     onClick: (event, elements, chart) => {
                         if (!elements.length) return;
-                        const element = elements[0];
-                        const datasetIndex = element.datasetIndex;
-                        const index = element.index;
-                        const dataset = chart.data.datasets[datasetIndex];
-                        if (dataset.data[index] !== null) {
-                            openModal(dataset.label, chart.data.labels[index], dataset.data[index], dataset.originalBackgroundColor);
-                        }
+                        const { datasetIndex, index } = elements[0];
+                        const ds = chart.data.datasets[datasetIndex];
+                        if (ds.data[index] !== null)
+                            openModal(ds.label, chart.data.labels[index], ds.data[index], ds.originalBackgroundColor);
                     },
                     onHover: (event, activeElements, chart) => {
                         event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
@@ -522,74 +637,56 @@
                     layout: { padding: { top: 20, right: 30, left: 10, bottom: 0 } },
                     plugins: {
                         legend: {
-                            display: true,
-                            position: 'top',
-                            align: 'end',
-                            onHover: (event, legendItem, legend) => {
-                                event.native.target.style.cursor = 'pointer';
-                                handleHoverEffect([{ datasetIndex: legendItem.datasetIndex }], legend.chart);
+                            display: true, position: 'top', align: 'end',
+                            onHover: (e, item, legend) => {
+                                e.native.target.style.cursor = 'pointer';
+                                handleHoverEffect([{ datasetIndex: item.datasetIndex }], legend.chart);
                             },
-                            onLeave: (event, legendItem, legend) => {
-                                event.native.target.style.cursor = 'default';
+                            onLeave: (e, item, legend) => {
+                                e.native.target.style.cursor = 'default';
                                 handleHoverEffect([], legend.chart);
                             },
                             labels: {
-                                usePointStyle: true,
-                                boxWidth: 8,
-                                padding: 20,
+                                usePointStyle: true, boxWidth: 8, padding: 20,
                                 font: { size: 11, weight: 500 },
-                                generateLabels: (chart) => chart.data.datasets.map((dataset, i) => ({
-                                    text: dataset.label,
-                                    fillStyle: dataset.originalBackgroundColor,
-                                    strokeStyle: dataset.originalBorderColor,
-                                    lineWidth: 2,
-                                    hidden: !chart.isDatasetVisible(i),
-                                    index: i,
-                                    datasetIndex: i,
-                                    pointStyle: 'circle'
+                                generateLabels: (chart) => chart.data.datasets.map((ds, i) => ({
+                                    text: ds.label, fillStyle: ds.originalBackgroundColor,
+                                    strokeStyle: ds.originalBorderColor, lineWidth: 2,
+                                    hidden: !chart.isDatasetVisible(i), index: i, datasetIndex: i, pointStyle: 'circle'
                                 }))
                             }
                         },
                         tooltip: {
-                            backgroundColor: '#ffffff',
-                            titleColor: '#1e293b',
-                            bodyColor: '#475569',
-                            borderColor: '#e2e8f0',
-                            borderWidth: 1,
-                            padding: 12,
-                            boxPadding: 6,
+                            backgroundColor: '#fff', titleColor: '#1e293b', bodyColor: '#475569',
+                            borderColor: '#e2e8f0', borderWidth: 1, padding: 12, boxPadding: 6,
                             usePointStyle: true,
                             callbacks: {
-                                label: (context) => {
-                                    let label = context.dataset.label || '';
-                                    if (label) label += ': ';
-                                    if (context.parsed.y !== null) label += formatNumber(context.parsed.y);
-                                    return label;
+                                label: (ctx) => {
+                                    let l = (ctx.dataset.label || '') + ': ';
+                                    if (ctx.parsed.y !== null) l += formatNumber(ctx.parsed.y);
+                                    return l;
                                 }
                             }
                         },
                         datalabels: {
-                            align: 'top',
-                            anchor: 'end',
-                            offset: 4,
+                            align: 'top', anchor: 'end', offset: 4,
                             color: (ctx) => ctx.dataset.borderColor,
                             font: { weight: 'bold', size: 9 },
                             formatter: (val) => val !== null ? Math.round(val) : '',
-                            display: (context) => context.dataset.datalabels?.display ?? 'auto'
+                            display: (ctx) => ctx.dataset.datalabels?.display ?? 'auto'
                         },
                         targetLines: {
                             lines: [
-                                { value: 135, label: '', color: '#0d9488', dash: [4, 4], width: 1.5 },
-                                { value: 65, label: '', color: '#65a30d', dash: [4, 4], width: 1.5 } 
+                                { value: 130, color: '#0d9488', dash: [4, 4], width: 1.5 },
+
+                                { value: 65, color: '#65a30d', dash: [4, 4], width: 1.5 }
                             ]
                         }
                     },
                     scales: {
                         x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748b' }, border: { display: false } },
                         y: {
-                            beginAtZero: true,
-                            max: 300,
-                            border: { display: false },
+                            beginAtZero: true, max: 300, border: { display: false },
                             grid: { color: '#f1f5f9', borderDash: [4, 4], tickLength: 0 },
                             ticks: { stepSize: 50, padding: 10, font: { size: 11 }, color: '#94a3b8' }
                         }
@@ -598,53 +695,57 @@
             });
         };
 
+        // ── INIT ──────────────────────────────────────────────────────────────
+
         document.addEventListener('DOMContentLoaded', () => {
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const chartContainer = document.getElementById('chartContainer');
-            const errorMessage = document.getElementById('errorMessage');
+            const loadingEl = document.getElementById('loadingIndicator');
+            const chartEl = document.getElementById('chartContainer');
+            const errorEl = document.getElementById('errorMessage');
 
             try {
                 const csvData = `MES,MI PLACE KASSOUF,MI PLACE XV,MI PLACE DOM PEDRO,MI PLACE REALME,MI PLACE PREMIUM
-2024-07-01,107,104,,57,
-2024-08-01,113,90,132,57,
-2024-09-01,107,65,155,61,
-2024-10-01,106,63,139,39,
-2024-11-01,98,89,176,47,
-2024-12-01,129,62,242,60,
-2025-01-01,115,68,271,90,23
-2025-02-01,58,66,162,67,53,
-2025-03-01,36,47,115,39,38,
-2025-04-01,58,67,140,81,58,
-2025-05-01,42,48,136,59,55,
-2025-06-01,72,83,175,87,85,
-2025-07-01,65,77,137,54,66,
-2025-08-01,65,49,117,68,65,
-2025-09-01,67,47,110,52,67,
-2025-10-01,46,43,136,74,70,
-2025-11-01,65,57,114,78,67,
-2025-12-01,65,56,152,81,66,
-2026-01-01,46,56,151,55,67
-2026-02-01,66,35,118,55,41`;
+2024-06-01,107,104,,57,
+2024-07-01,113,90,132,57,
+2024-08-01,107,65,155,61,
+2024-09-01,106,63,139,39,
+2024-10-01,98,89,176,47,
+2024-11-01,129,62,242,60,
+2024-12-01,115,68,271,90,23
+2025-01-01,58,66,162,67,53
+2025-02-01,36,47,115,39,38
+2025-03-01,58,67,140,81,58
+2025-04-01,42,48,136,59,55
+2025-05-01,72,83,175,87,85
+2025-06-01,65,77,137,54,66
+2025-07-01,65,49,117,68,65
+2025-08-01,67,47,110,52,67
+2025-09-01,46,43,136,74,70
+2025-10-01,65,57,114,78,67
+2025-11-01,65,56,152,81,66
+2025-12-01,46,56,151,55,67
+2026-01-01,66,35,118,55,41
+2026-02-01,70,43,83,51,38`;
 
                 const lines = csvData.trim().split('\n');
-                const headers = lines[0].split(',').map(h => h.trim()); 
-                const parsedData = lines.slice(1).map(line => {
+                const headers = lines[0].split(',').map(h => h.trim());
+                const parsed = lines.slice(1).map(line => {
                     const values = line.split(',').map(v => v.trim());
                     return headers.reduce((acc, h, i) => (acc[h] = values[i] || null, acc), {});
                 });
 
-                allValidData = parsedData.filter(row => row.MES); 
+                allValidData = parsed.filter(row => row.MES);
                 chartLabels = allValidData.map(row => getFormattedDate(row.MES));
                 updateSummaryMetrics(allValidData);
                 renderChart();
-                loadingIndicator.classList.add('hidden');
-                chartContainer.classList.remove('hidden');
-            } catch (error) {
-                loadingIndicator.classList.add('hidden');
-                errorMessage.classList.remove('hidden');
-                document.getElementById('errorText').textContent = error.message;
+                loadingEl.classList.add('hidden');
+                chartEl.classList.remove('hidden');
+            } catch (err) {
+                loadingEl.classList.add('hidden');
+                errorEl.classList.remove('hidden');
+                document.getElementById('errorText').textContent = err.message;
             }
         });
     </script>
 </body>
+
 </html>
