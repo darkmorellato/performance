@@ -1,0 +1,424 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "app.js",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L1",
+      "id": "app_js",
+      "community": 0,
+      "norm_label": "app.js"
+    },
+    {
+      "label": "loadLogo()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L9",
+      "id": "app_loadlogo",
+      "community": 0,
+      "norm_label": "loadlogo()"
+    },
+    {
+      "label": "preloadLogos()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L40",
+      "id": "app_preloadlogos",
+      "community": 0,
+      "norm_label": "preloadlogos()"
+    },
+    {
+      "label": "easeOutQuart()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L49",
+      "id": "app_easeoutquart",
+      "community": 0,
+      "norm_label": "easeoutquart()"
+    },
+    {
+      "label": "animateCounter()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L51",
+      "id": "app_animatecounter",
+      "community": 2,
+      "norm_label": "animatecounter()"
+    },
+    {
+      "label": "buildNarrative()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L68",
+      "id": "app_buildnarrative",
+      "community": 1,
+      "norm_label": "buildnarrative()"
+    },
+    {
+      "label": "generateFeedbackHTML()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L94",
+      "id": "app_generatefeedbackhtml",
+      "community": 1,
+      "norm_label": "generatefeedbackhtml()"
+    },
+    {
+      "label": "openModal()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L179",
+      "id": "app_openmodal",
+      "community": 1,
+      "norm_label": "openmodal()"
+    },
+    {
+      "label": "closeModal()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L197",
+      "id": "app_closemodal",
+      "community": 0,
+      "norm_label": "closemodal()"
+    },
+    {
+      "label": "getFormattedDate()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L250",
+      "id": "app_getformatteddate",
+      "community": 0,
+      "norm_label": "getformatteddate()"
+    },
+    {
+      "label": "formatNumber()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L261",
+      "id": "app_formatnumber",
+      "community": 1,
+      "norm_label": "formatnumber()"
+    },
+    {
+      "label": "updateSummaryMetrics()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L266",
+      "id": "app_updatesummarymetrics",
+      "community": 2,
+      "norm_label": "updatesummarymetrics()"
+    },
+    {
+      "label": "handleHoverEffect()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L278",
+      "id": "app_handlehovereffect",
+      "community": 0,
+      "norm_label": "handlehovereffect()"
+    },
+    {
+      "label": "createCustomLegend()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L306",
+      "id": "app_createcustomlegend",
+      "community": 3,
+      "norm_label": "createcustomlegend()"
+    },
+    {
+      "label": "renderChart()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L420",
+      "id": "app_renderchart",
+      "community": 3,
+      "norm_label": "renderchart()"
+    },
+    {
+      "label": "resize()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L592",
+      "id": "app_resize",
+      "community": 0,
+      "norm_label": "resize()"
+    },
+    {
+      "label": "animate()",
+      "file_type": "code",
+      "source_file": "js\\app.js",
+      "source_location": "L602",
+      "id": "app_animate",
+      "community": 0,
+      "norm_label": "animate()"
+    },
+    {
+      "label": "config.js",
+      "file_type": "code",
+      "source_file": "js\\config.js",
+      "source_location": "L1",
+      "id": "config_js",
+      "community": 4,
+      "norm_label": "config.js"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_loadlogo",
+      "source": "app_js",
+      "target": "app_loadlogo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_preloadlogos",
+      "source": "app_js",
+      "target": "app_preloadlogos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L49",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_easeoutquart",
+      "source": "app_js",
+      "target": "app_easeoutquart",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_animatecounter",
+      "source": "app_js",
+      "target": "app_animatecounter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_buildnarrative",
+      "source": "app_js",
+      "target": "app_buildnarrative",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_generatefeedbackhtml",
+      "source": "app_js",
+      "target": "app_generatefeedbackhtml",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L179",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_openmodal",
+      "source": "app_js",
+      "target": "app_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L197",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_closemodal",
+      "source": "app_js",
+      "target": "app_closemodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L250",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_getformatteddate",
+      "source": "app_js",
+      "target": "app_getformatteddate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L261",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_formatnumber",
+      "source": "app_js",
+      "target": "app_formatnumber",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L266",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_updatesummarymetrics",
+      "source": "app_js",
+      "target": "app_updatesummarymetrics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L278",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_handlehovereffect",
+      "source": "app_js",
+      "target": "app_handlehovereffect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L306",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_createcustomlegend",
+      "source": "app_js",
+      "target": "app_createcustomlegend",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L420",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_renderchart",
+      "source": "app_js",
+      "target": "app_renderchart",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L592",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_resize",
+      "source": "app_js",
+      "target": "app_resize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L602",
+      "weight": 1.0,
+      "_src": "app_js",
+      "_tgt": "app_animate",
+      "source": "app_js",
+      "target": "app_animate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L274",
+      "weight": 1.0,
+      "_src": "app_updatesummarymetrics",
+      "_tgt": "app_animatecounter",
+      "source": "app_animatecounter",
+      "target": "app_updatesummarymetrics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L143",
+      "weight": 1.0,
+      "_src": "app_generatefeedbackhtml",
+      "_tgt": "app_buildnarrative",
+      "source": "app_buildnarrative",
+      "target": "app_generatefeedbackhtml",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L186",
+      "weight": 1.0,
+      "_src": "app_openmodal",
+      "_tgt": "app_generatefeedbackhtml",
+      "source": "app_generatefeedbackhtml",
+      "target": "app_openmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L183",
+      "weight": 1.0,
+      "_src": "app_openmodal",
+      "_tgt": "app_formatnumber",
+      "source": "app_openmodal",
+      "target": "app_formatnumber",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "js\\app.js",
+      "source_location": "L525",
+      "weight": 1.0,
+      "_src": "app_renderchart",
+      "_tgt": "app_createcustomlegend",
+      "source": "app_createcustomlegend",
+      "target": "app_renderchart",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": []
+}
