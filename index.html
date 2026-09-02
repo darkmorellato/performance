@@ -4,42 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance de Vendas por Loja</title>
+    <title>Performance de Vendas por Loja - Rede Mi Place</title>
+    
+    <!-- Favicon & Touch Icons -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    
+    <!-- Preconnect for Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'Space Grotesk', 'system-ui', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                        mono: ['"Roboto Mono"', 'monospace']
+                    },
                     colors: {
-                        page: '#FEF9EF',
-                        card: '#FFFFFF',
-                        cardalt: '#FFF5E1',
-                        brutal: {
-                            DEFAULT: '#2D3436',
-                            blue: '#0984E3',
-                            green: '#00B894',
-                            pink: '#E84393',
-                            purple: '#6C5CE7',
-                            orange: '#E17055'
-                        },
-                        pastel: {
-                            blue: '#74B9FF',
-                            green: '#55EFC4',
-                            pink: '#FD79A8',
-                            purple: '#A29BFE',
-                            orange: '#FAB1A0',
-                            yellow: '#FFEAA7',
-                            mint: '#E8F8F5',
-                            sky: '#E8F4FD',
-                            cream: '#FFF5E1',
-                            red: '#FED7D7'
+                        brand: {
+                            50: '#faf9f6',
+                            100: '#f5f0eb',
+                            500: '#78716c',
+                            600: '#57534e',
+                            700: '#44403c',
+                            900: '#1c1917',
+                            dark: '#1c1917'
                         }
+                    },
+                    boxShadow: {
+                        'soft': 'none',
+                        'card': '0 0 0 1px rgba(28,25,23,0.06)'
                     }
                 }
             }
@@ -49,117 +55,121 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="text-slate-800 antialiased p-4 md:p-8">
-    <canvas id="bgCanvas"
-        style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;"></canvas>
+<body class="text-stone-600 antialiased p-4 md:p-8">
 
-    <div class="max-w-7xl mx-auto">
+    <header class="max-w-7xl mx-auto">
         <div class="dashboard-header">
             <div>
-                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">Dashboard de Vendas</h1>
-                <p class="text-sm mt-1 font-medium">Rede Mi Place &nbsp;&bull;&nbsp; Acompanhamento Mensal</p>
+                <h1 class="text-2xl md:text-3xl font-serif font-bold text-stone-900 tracking-tight">Dashboard de Vendas</h1>
+                <p class="text-xs font-bold text-stone-500 uppercase tracking-[0.2em] mt-2">Rede Mi Place &nbsp;&bull;&nbsp; Acompanhamento Mensal</p>
             </div>
             <div class="header-actions">
-                <div class="store-tag">
-                    <span class="store-dot bg-pastel-blue"></span>
-                    <span>5 Lojas Ativas</span>
+                <div class="store-tag" id="activeStoresBadge">
+                    <span class="store-dot" aria-hidden="true"></span>
+                    <span id="activeStoresText">5 Lojas Ativas</span>
                 </div>
                 <span class="badge-live">
-                    <span class="dot"></span>
+                    <span class="dot" aria-hidden="true"></span>
                     Dados Atualizados
                 </span>
             </div>
         </div>
-    </div>
+    </header>
 
-    <div class="max-w-7xl mx-auto main-card">
-        <div class="kpi-grid">
+    <main class="max-w-7xl mx-auto main-card">
+        <section class="kpi-grid" aria-label="Métricas Principais">
             <div class="kpi-card">
-                <div class="kpi-icon blue">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                <div class="kpi-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                 </div>
                 <div>
                     <p class="kpi-label">Total Acumulado</p>
-                    <p id="totalSales" class="kpi-value font-black">--</p>
+                    <p id="totalSales" class="kpi-value" aria-live="polite">--</p>
                     <p class="kpi-sub">Vendas no período completo</p>
                 </div>
             </div>
             <div class="kpi-card">
-                <div class="kpi-icon green">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                <div class="kpi-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                 </div>
                 <div>
                     <p class="kpi-label">Média Mensal da Rede</p>
-                    <p id="averageSales" class="kpi-value font-black">--</p>
+                    <p id="averageSales" class="kpi-value" aria-live="polite">--</p>
                     <p class="kpi-sub">Vendas por mês</p>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="p-6 md:p-8 relative chart-area-with-bg">
-            <div id="loadingIndicator" class="flex flex-col justify-center items-center h-80">
-                <span class="loader"></span>
-                <p class="text-sm font-bold mt-4" id="loadingStatus">Processando dados...</p>
+        <section class="p-6 md:p-8 relative chart-area-with-bg" aria-label="Evolução de Vendas">
+            <div id="loadingIndicator" class="flex flex-col justify-center items-center h-80" aria-live="polite">
+                <span class="loader" aria-hidden="true"></span>
+                <p class="text-xs font-bold text-stone-500 uppercase tracking-[0.2em] mt-4" id="loadingStatus">Processando dados...</p>
             </div>
             <div id="chartContainer" class="chart-container hidden">
-                <canvas id="salesChart"></canvas>
+                <canvas id="salesChart" role="img" aria-label="Gráfico de linhas mostrando a performance de vendas mensal de cada loja"></canvas>
             </div>
             <div id="errorMessage"
-                class="hidden p-4 mb-4 text-sm font-semibold bg-pastel-red border-2 border-brutal rounded-lg"
+                class="hidden p-4 mb-4 text-sm font-medium bg-brand-50 border border-stone-200 text-stone-700"
                 role="alert">
-                <span class="font-extrabold">Erro ao carregar dados:</span> <span id="errorText"></span>
+                <span class="font-bold uppercase tracking-[0.15em] text-xs text-stone-600">Erro ao carregar dados:</span> <span id="errorText"></span>
             </div>
-        </div>
+        </section>
 
-        <div class="card-footer">
+        <footer class="card-footer">
             <span class="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Dados de performance interna &mdash; Mi Place
             </span>
-            <span class="font-semibold">Analytics by Dark Morellato</span>
-        </div>
-    </div>
+            <span class="font-semibold uppercase tracking-[0.15em] text-xs">Analytics by Dark Morellato</span>
+        </footer>
+    </main>
 
-    <div id="detailModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <!-- Modal de Detalhes -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="modalStoreName" aria-describedby="modalFeedbackContent">
         <div id="modalBackdrop"
             class="absolute inset-0 transition-opacity opacity-0">
         </div>
         <div id="modalWrapper"
             class="fixed inset-0 z-10 w-screen overflow-y-auto flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div id="modalPanel"
-                class="relative transform overflow-hidden rounded-2xl text-left transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 scale-95">
-                <div class="px-4 pb-4 pt-5 sm:p-6 sm:pb-8">
+                class="relative transform overflow-hidden text-left transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 scale-95">
+                <button id="modalCloseBtn" type="button" class="modal-close-btn" aria-label="Fechar janela de detalhes">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <div class="px-6 pb-6 pt-6 sm:p-8 sm:pb-8">
                     <div class="sm:flex sm:items-start sm:justify-center">
                         <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-center w-full">
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-cardalt border-2 border-brutal mb-4 shadow-brutal-sm">
-                                <span class="w-2 h-2 rounded-full animate-pulse" id="modalStatusDot"></span>
-                                <h3 class="text-xs font-extrabold uppercase tracking-widest"
+                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-brand-50 border border-stone-200 mb-4">
+                                <span class="w-1.5 h-1.5 rounded-full animate-pulse" id="modalStatusDot" aria-hidden="true"></span>
+                                <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-stone-700"
                                     id="modalStoreName">LOJA</h3>
                             </div>
                             <div class="mt-4">
-                                <p class="text-sm font-semibold mb-2" id="modalDateLabel">Mês/Ano</p>
-                                <p class="text-6xl font-black tracking-tighter gradient-text" id="modalValueDisplay">0</p>
-                                <p class="text-xs font-bold mt-2 uppercase tracking-wider">Vendas Realizadas</p>
+                                <p class="text-xs font-bold text-stone-500 uppercase tracking-[0.2em] mb-3" id="modalDateLabel">Mês/Ano</p>
+                                <p class="text-6xl font-serif font-bold text-stone-900 leading-none tracking-tight" id="modalValueDisplay">0</p>
+                                <p class="text-xs font-bold text-stone-500 uppercase tracking-[0.2em] mt-3">Vendas Realizadas</p>
                             </div>
                             <div id="modalFeedbackContainer"
-                                class="mt-6 border-t-2 border-brutal pt-6 text-left hidden">
+                                class="mt-6 border-t border-stone-200 pt-6 text-left hidden">
                                 <div id="modalFeedbackContent"
-                                    class="text-sm space-y-4 bg-cardalt border-2 border-brutal p-5 rounded-lg leading-relaxed shadow-brutal-sm">
+                                    class="text-sm space-y-3 leading-relaxed">
                                 </div>
                             </div>
-                            <p class="text-[10px] font-medium mt-6 italic">Clique fora desta janela para fechar</p>
+                            <p class="text-xs font-medium text-stone-500 uppercase tracking-[0.15em] mt-6">Clique fora ou pressione Esc para fechar</p>
                         </div>
                     </div>
                 </div>
@@ -167,8 +177,8 @@
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/app.js"></script>
+    <!-- ES Module Application Entrypoint -->
+    <script type="module" src="js/app.js"></script>
 </body>
 
 </html>

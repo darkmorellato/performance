@@ -1,50 +1,44 @@
-const STORE_META = {
-    'Miplace Honor': 130,
-    'Miplace Kassouf': 65,
-    'Miplace Prime': 65,
-    'Miplace Realme': 65,
-    'Miplace Premium': 65
-};
+/* ============================================
+   STORE CONFIGURATION & DATA DICTIONARY
+   Warm Editorial Luxury BI Design System
+   ============================================ */
 
-const STORE_KEY_MAP = {
-    'DOM PEDRO': 'Miplace Honor',
-    'KASSOUF': 'Miplace Kassouf',
-    'XV': 'Miplace Prime',
-    'REALME': 'Miplace Realme',
-    'PREMIUM': 'Miplace Premium'
-};
-
-const STORE_CONFIG = {
-    'Miplace Kassouf': {
-        color: '#E17055',
-        borderColor: '#D63031',
-        logo: 'img/Miplace Kassouf.png'
-    },
-    'Miplace Prime': {
-        color: '#2D3436',
-        borderColor: '#000000',
-        logo: 'img/MiPlace Prime.png'
-    },
-    'Miplace Honor': {
-        color: '#0984E3',
-        borderColor: '#0652DD',
+export const STORE_CONFIG = Object.freeze({
+    'Miplace Honor': Object.freeze({
+        shortName: 'Honor',
+        target: 130,
+        color: 'rgba(100, 148, 237, 0.10)',  // #6494ED fill (Cornflower Blue)
+        borderColor: '#6494ED',
         logo: 'img/MiPlace Honor.png'
-    },
-    'Miplace Realme': {
-        color: '#FDCB6E',
-        borderColor: '#F39C12',
+    }),
+    'Miplace Kassouf': Object.freeze({
+        shortName: 'Kassouf',
+        target: 65,
+        color: 'rgba(233, 116, 81, 0.10)',   // #E97451 fill (Burnt Sienna)
+        borderColor: '#E97451',
+        logo: 'img/Miplace Kassouf.png'
+    }),
+    'Miplace Realme': Object.freeze({
+        shortName: 'Realme',
+        target: 65,
+        color: 'rgba(255, 191, 0, 0.10)',     // #FFBF00 fill (Amber)
+        borderColor: '#FFBF00',
         logo: 'img/Miplace Realme.png'
-    },
-    'Miplace Premium': {
-        color: '#6C5CE7',
-        borderColor: '#5A4FCF',
+    }),
+    'Miplace Premium': Object.freeze({
+        shortName: 'Premium',
+        target: 65,
+        color: 'rgba(147, 197, 114, 0.10)',  // #93C572 fill (Pastel Green)
+        borderColor: '#93C572',
         logo: 'img/Miplace Premium.png'
-    }
-};
+    }),
+    'Miplace Prime': Object.freeze({
+        shortName: 'Prime',
+        target: 65,
+        color: 'rgba(54, 69, 79, 0.10)',      // #36454F fill (Charcoal)
+        borderColor: '#36454F',
+        logo: 'img/MiPlace Prime.png'
+    })
+});
 
-const allStoreNames = Object.keys(STORE_CONFIG);
-
-const STORE_KEY_REVERSE = Object.entries(STORE_KEY_MAP).reduce(
-    (acc, [key, value]) => ({ ...acc, [value]: key }),
-    {}
-);
+export const allStoreNames = Object.freeze(Object.keys(STORE_CONFIG));
