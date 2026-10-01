@@ -77,6 +77,12 @@
     padding: 0;
 }
 
+/* Fallback da classe utilitária do Tailwind: garante o ocultamento mesmo
+   se o CDN do Tailwind não carregar (offline / bloqueado). */
+.hidden {
+    display: none !important;
+}
+
 html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;

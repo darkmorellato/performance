@@ -9,12 +9,31 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         chartLabels: [],
         labelToIndex: new Map(),
         loadedLogos: {},
-        allLogosLoaded: false,
-        lastFocusedElement: null
+        lastFocusedElement: null,
+        modalOpen: false,
+        modalCloseTimer: null
     };
 
     let currentHoveredDatasetIndex = -1;
+    let lastHoverKey = '';
     let canvasListenersAttached = false;
+    let pendingMouseEvent = null;
+    let hoverFrameId = null;
+
+    const cancelPendingHover = () => {
+        if (hoverFrameId !== null) {
+            cancelAnimationFrame(hoverFrameId);
+            hoverFrameId = null;
+        }
+        pendingMouseEvent = null;
+    };
+
+    // destroy() do Chart.js zera chart.canvas; usado para ignorar instâncias mortas
+    const isChartUsable = (chart) => {
+        if (!chart || chart.canvas === null) return false;
+        if (typeof chart.isDestroyed === 'function' && chart.isDestroyed()) return false;
+        return true;
+    };
 
     const DOM = {
         get totalSales() { return document.getElementById('totalSales'); },
@@ -62,8 +81,14 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         if (!dateStr) return '-';
         const parts = dateStr.split('-');
         if (parts.length !== 3) return '-';
-        const date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+        const y = +parts[0];
+        const m = +parts[1];
+        const d = +parts[2];
+        if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return '-';
+        if (m < 1 || m > 12 || d < 1 || d > 31) return '-';
+        const date = new Date(y, m - 1, d);
         if (isNaN(date.getTime())) return '-';
+        if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return '-';
         const month = monthFormatter.format(date).replace('.', '');
         const year = date.getFullYear().toString().slice(-2);
         return month.charAt(0).toUpperCase() + month.slice(1) + '/' + year;
@@ -160,49 +185,50 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
                 state.loadedLogos[store] = img;
             });
         });
-        return Promise.all(promises).then(() => {
-            state.allLogosLoaded = true;
-        });
+        return Promise.all(promises);
     };
 
-    const buildNarrative = (store, date, value, meta, achievement, prevValue, prevDate, delta) => {
+    const buildNarrative = (store, date, value, meta, achievement, delta) => {
         const gap = meta - value;
+        const achStr = formatNumber(achievement, 1);
+        const deltaStr = formatNumber(delta, 1);
+        const absDeltaStr = formatNumber(Math.abs(delta), 1);
 
         if (achievement >= 100) {
             if (delta !== null && delta > 0) {
-                return `A unidade ${store} registrou desempenho positivo em ${date}, superando a meta estabelecida com ${value} vendas — ${achievement.toFixed(1)}% do objetivo. O crescimento de ${delta.toFixed(1)}% em relação ao período anterior reforça a consistência da equipe e a eficácia das estratégias aplicadas. Recomenda-se manter o ritmo e aprimorar as práticas que conduziram a este resultado.`;
+                return `A unidade ${store} registrou desempenho positivo em ${date}, superando a meta estabelecida com ${value} vendas — ${achStr}% do objetivo. O crescimento de ${deltaStr}% em relação ao período anterior reforça a consistência da equipe e a eficácia das estratégias aplicadas. Recomenda-se manter o ritmo e aprimorar as práticas que conduziram a este resultado.`;
             }
-            return `A unidade ${store} atingiu e superou a meta em ${date}, totalizando ${value} vendas — ${achievement.toFixed(1)}% do objetivo. Este resultado demonstra o comprometimento da equipe com os objetivos da rede. Parabenizamos toda a equipe e recomendamos manter a consistência operacional para os próximos períodos.`;
+            return `A unidade ${store} atingiu e superou a meta em ${date}, totalizando ${value} vendas — ${achStr}% do objetivo. Este resultado demonstra o comprometimento da equipe com os objetivos da rede. Parabenizamos toda a equipe e recomendamos manter a consistência operacional para os próximos períodos.`;
         }
 
         if (achievement >= 85) {
             if (delta !== null && delta > 0) {
-                return `A unidade ${store} ficou próxima da meta em ${date}, com ${value} vendas realizadas (${achievement.toFixed(1)}% do objetivo) — um déficit de apenas ${gap} unidades. O crescimento de ${delta.toFixed(1)}% frente ao período anterior demonstra evolução positiva e indica que a equipe está no caminho certo. Com pequenos ajustes operacionais e foco nas oportunidades de fechamento, o cumprimento integral da meta está ao alcance.`;
+                return `A unidade ${store} ficou próxima da meta em ${date}, com ${value} vendas realizadas (${achStr}% do objetivo) — um déficit de apenas ${gap} unidades. O crescimento de ${deltaStr}% frente ao período anterior demonstra evolução positiva e indica que a equipe está no caminho certo. Com pequenos ajustes operacionais e foco nas oportunidades de fechamento, o cumprimento integral da meta está ao alcance.`;
             }
             const retText = (delta !== null && delta < 0)
-                ? `A leve retração de ${Math.abs(delta).toFixed(1)}% frente ao período anterior exige atenção. Recomenda-se `
+                ? `A leve retração de ${absDeltaStr}% frente ao período anterior exige atenção. Recomenda-se `
                 : 'Recomenda-se ';
-            return `A unidade ${store} apresentou resultado próximo da meta em ${date}, com ${value} vendas realizadas (${achievement.toFixed(1)}% do objetivo). ${retText}identificar os fatores que impediram o atingimento pleno e adotar ações corretivas para garantir o cumprimento da meta nos próximos períodos.`;
+            return `A unidade ${store} apresentou resultado próximo da meta em ${date}, com ${value} vendas realizadas (${achStr}% do objetivo). ${retText}identificar os fatores que impediram o atingimento pleno e adotar ações corretivas para garantir o cumprimento da meta nos próximos períodos.`;
         }
 
         if (achievement >= 60) {
             if (delta !== null && delta > 0) {
-                return `A unidade ${store} encerrou ${date} com ${value} vendas — atingimento de ${achievement.toFixed(1)}% da meta de ${meta} unidades. Apesar da evolução positiva de ${delta.toFixed(1)}% frente ao período anterior, o resultado ainda está aquém do objetivo. O déficit de ${gap} vendas exige ação estruturada, com metas intermediárias semanais e acompanhamento próximo dos indicadores.`;
+                return `A unidade ${store} encerrou ${date} com ${value} vendas — atingimento de ${achStr}% da meta de ${meta} unidades. Apesar da evolução positiva de ${deltaStr}% frente ao período anterior, o resultado ainda está aquém do objetivo. O déficit de ${gap} vendas exige ação estruturada, com metas intermediárias semanais e acompanhamento próximo dos indicadores.`;
             }
             const retText = (delta !== null && delta < 0)
-                ? `— com retração de ${Math.abs(delta).toFixed(1)}% frente ao período anterior — `
+                ? `— com retração de ${absDeltaStr}% frente ao período anterior — `
                 : '';
-            return `A unidade ${store} encerrou ${date} com ${value} vendas realizadas, representando ${achievement.toFixed(1)}% da meta de ${meta} unidades. Este desempenho abaixo do esperado ${retText}exige levantamento das causas, revisão das abordagens comerciais e implementação de plano de ação estruturado com indicadores claros de acompanhamento.`;
+            return `A unidade ${store} encerrou ${date} com ${value} vendas realizadas, representando ${achStr}% da meta de ${meta} unidades. Este desempenho abaixo do esperado ${retText}exige levantamento das causas, revisão das abordagens comerciais e implementação de plano de ação estruturado com indicadores claros de acompanhamento.`;
         }
 
         if (delta !== null && delta > 0) {
-            return `A unidade ${store} registrou em ${date} um total de ${value} vendas — atingimento de ${achievement.toFixed(1)}% da meta de ${meta} unidades. Embora a evolução de ${delta.toFixed(1)}% frente ao período anterior sinalize melhora no ritmo, o resultado absoluto ainda é crítico. O déficit de ${gap} vendas é expressivo e requer intervenção estratégica, diagnóstico preciso dos gargalos operacionais e plano de recuperação com metas semanais monitoradas.`;
+            return `A unidade ${store} registrou em ${date} um total de ${value} vendas — atingimento de ${achStr}% da meta de ${meta} unidades. Embora a evolução de ${deltaStr}% frente ao período anterior sinalize melhora no ritmo, o resultado absoluto ainda é crítico. O déficit de ${gap} vendas é expressivo e requer intervenção estratégica, diagnóstico preciso dos gargalos operacionais e plano de recuperação com metas semanais monitoradas.`;
         }
 
         const retText = (delta !== null && delta < 0)
-            ? `A retração de ${Math.abs(delta).toFixed(1)}% em relação ao período anterior agrava ainda mais o cenário. `
+            ? `A retração de ${absDeltaStr}% em relação ao período anterior agrava ainda mais o cenário. `
             : '';
-        return `A unidade ${store} encerrou ${date} com apenas ${value} vendas realizadas — atingimento de ${achievement.toFixed(1)}% da meta de ${meta} unidades — configurando um resultado crítico. ${retText}Esta situação exige diagnóstico aprofundado e imediato, seguido de implementação urgente de plano de recuperação com metas intermediárias claras, acompanhamento diário e envolvimento direto da liderança para reverter a trajetória.`;
+        return `A unidade ${store} encerrou ${date} com apenas ${value} vendas realizadas — atingimento de ${achStr}% da meta de ${meta} unidades — configurando um resultado crítico. ${retText}Esta situação exige diagnóstico aprofundado e imediato, seguido de implementação urgente de plano de recuperação com metas intermediárias claras, acompanhamento diário e envolvimento direto da liderança para reverter a trajetória.`;
     };
 
     const findPrevValue = (store, currentIdx) => {
@@ -225,7 +251,7 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         const prevDate = prev ? prev.date : null;
 
         const delta = prevValue !== null && prevValue > 0 ? ((value - prevValue) / prevValue * 100) : null;
-        const deltaStr = delta !== null ? `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%` : null;
+        const deltaStr = delta !== null ? `${delta >= 0 ? '+' : ''}${formatNumber(delta, 1)}%` : null;
 
         let statusClass, achievementBadgeClass;
         if (achievement >= 100) {
@@ -256,12 +282,12 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
                    <span class="text-sm font-semibold text-stone-600">Primeiro período registrado</span>
                </div>`;
 
-        const narrative = buildNarrative(store, date, value, meta, achievement, prevValue, prevDate, delta);
+        const narrative = buildNarrative(store, date, value, meta, achievement, delta);
 
         return `
             <div class="flex items-center justify-between gap-3 mb-4">
                 <p class="font-extrabold text-lg text-stone-900">${store}</p>
-                <span class="achievement-badge ${achievementBadgeClass}">${achievement.toFixed(1)}% da meta</span>
+                <span class="achievement-badge ${achievementBadgeClass}">${formatNumber(achievement, 1)}% da meta</span>
             </div>
             <p class="text-xs font-bold uppercase tracking-widest text-stone-500 mb-4">Análise de Desempenho &bull; Reunião de Equipe</p>
             <div class="space-y-2 text-left">
@@ -275,7 +301,7 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
                 </div>
                 <div class="metric-row">
                     <span class="text-sm font-bold text-stone-700">Atingimento</span>
-                    <span class="text-sm ${statusClass}">${achievement.toFixed(1)}%</span>
+                    <span class="text-sm ${statusClass}">${formatNumber(achievement, 1)}%</span>
                 </div>
                 ${evolutionRow}
             </div>
@@ -285,8 +311,41 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
             </div>`;
     };
 
+    const setBackgroundInert = (inert) => {
+        ['header', 'main'].forEach((sel) => {
+            const el = document.querySelector(sel);
+            if (!el) return;
+            if (inert) el.setAttribute('inert', '');
+            else el.removeAttribute('inert');
+        });
+    };
+
+    const getModalFocusables = () => {
+        if (!DOM.modalPanel) return [];
+        const nodes = DOM.modalPanel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        return Array.from(nodes).filter((el) => !el.hasAttribute('disabled') && el.getClientRects().length > 0);
+    };
+
+    const restoreModalFocus = () => {
+        const el = state.lastFocusedElement;
+        state.lastFocusedElement = null;
+        if (!el || !el.isConnected || typeof el.focus !== 'function') return;
+        if (el === document.body || el === document.documentElement) return;
+        const nativelyFocusable = ['BUTTON', 'A', 'INPUT', 'SELECT', 'TEXTAREA', 'IFRAME'].includes(el.tagName);
+        if (nativelyFocusable || el.hasAttribute('tabindex')) el.focus();
+    };
+
     const openModal = (store, date, value, color, triggerElement = null) => {
+        // Cancela um fechamento em andamento: sem isso, o timer pendente
+        // esconderia o modal recém-reaberto
+        if (state.modalCloseTimer) {
+            clearTimeout(state.modalCloseTimer);
+            state.modalCloseTimer = null;
+        }
+
         state.lastFocusedElement = triggerElement || document.activeElement;
+        state.modalOpen = true;
+        hideTooltip();
 
         DOM.modalStoreName.textContent = store;
         DOM.modalDateLabel.textContent = date;
@@ -308,18 +367,28 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
 
         [DOM.modalStoreName, DOM.modalDateLabel, DOM.modalValueDisplay, DOM.modalFeedbackContainer].forEach((el, i) => {
             if (!el) return;
+            el.classList.remove('modal-content-item');
+            void el.offsetWidth;
             el.classList.add('modal-content-item');
             el.style.animationDelay = (0.18 + i * 0.08) + 's';
         });
 
+        setBackgroundInert(true);
+        document.body.style.overflow = 'hidden';
+
         setTimeout(() => {
-            if (DOM.modalCloseBtn) {
+            if (state.modalOpen && DOM.modalCloseBtn) {
                 DOM.modalCloseBtn.focus();
             }
         }, 100);
     };
 
     const closeModal = () => {
+        if (!state.modalOpen) return;
+        state.modalOpen = false;
+
+        document.body.style.overflow = '';
+        setBackgroundInert(false);
         // Desbloqueia cliques no dashboard imediatamente ao iniciar o fechamento
         DOM.detailModal.style.pointerEvents = 'none';
 
@@ -331,15 +400,20 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
             if (!el) return;
             el.style.animationDelay = '';
         });
-        setTimeout(() => {
+
+        if (state.modalCloseTimer) clearTimeout(state.modalCloseTimer);
+        state.modalCloseTimer = setTimeout(() => {
+            state.modalCloseTimer = null;
             DOM.detailModal.classList.add('hidden');
             DOM.modalBackdrop.classList.remove('fade-out');
             DOM.modalPanel.classList.remove('slide-down');
             DOM.detailModal.style.pointerEvents = '';
+            [DOM.modalStoreName, DOM.modalDateLabel, DOM.modalValueDisplay, DOM.modalFeedbackContainer].forEach((el) => {
+                if (!el) return;
+                el.classList.remove('modal-content-item');
+            });
 
-            if (state.lastFocusedElement && typeof state.lastFocusedElement.focus === 'function') {
-                state.lastFocusedElement.focus();
-            }
+            restoreModalFocus();
         }, 250);
     };
 
@@ -353,8 +427,30 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
             DOM.modalCloseBtn.addEventListener('click', () => closeModal());
         }
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !DOM.detailModal.classList.contains('hidden')) {
+            if (!state.modalOpen) return;
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
                 closeModal();
+                return;
+            }
+
+            if (e.key !== 'Tab') return;
+            const focusables = getModalFocusables();
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            const inside = !!(active && DOM.modalPanel && DOM.modalPanel.contains(active));
+
+            if (e.shiftKey) {
+                if (!inside || active === first) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            } else if (!inside || active === last) {
+                e.preventDefault();
+                first.focus();
             }
         });
     };
@@ -517,6 +613,7 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
     const setLinesToOriginalColors = (chart) => {
         if (!chart) return;
         currentHoveredDatasetIndex = -1;
+        lastHoverKey = '';
         chart.data.datasets.forEach((ds, idx) => {
             ds.borderColor = ds.originalBorderColor;
             ds.borderWidth = 3;
@@ -549,8 +646,10 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         });
     };
 
-    // Algoritmo geométrico contínuo de altíssima precisão:
-    // Calcula a distância perpendicular em relação à curva interpolada de cada linha
+    // Algoritmo geométrico contínuo:
+    // Calcula a distância vertical em relação à curva interpolada de cada linha.
+    // Pontos com dado nulo chegam do Chart.js com skip=true e y na linha de base,
+    // então precisam ser descartados antes de qualquer comparação.
     const getClosestDatasetAndPoint = (chart, mx, my) => {
         if (!chart || !chart.chartArea) return { datasetIndex: -1, pointIndex: -1 };
         const { left, right, top, bottom } = chart.chartArea;
@@ -567,33 +666,39 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
             const meta = chart.getDatasetMeta(dsIndex);
             if (!meta || !meta.data || meta.data.length === 0) continue;
 
-            const points = meta.data;
-            const numPoints = points.length;
+            const pts = [];
+            for (let i = 0; i < meta.data.length; i++) {
+                const p = meta.data[i];
+                if (!p || p.skip || !Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+                pts.push({ index: i, x: p.x, y: p.y });
+            }
+            if (pts.length === 0) continue;
+
+            const first = pts[0];
+            const last = pts[pts.length - 1];
 
             // Encontrar o ponto mais próximo em X
-            let nearestPtIdx = 0;
+            let nearest = first;
             let minXDist = Infinity;
-            for (let i = 0; i < numPoints; i++) {
-                const p = points[i];
-                if (!p || p.skip || isNaN(p.x)) continue;
-                const xDist = Math.abs(mx - p.x);
+            for (let i = 0; i < pts.length; i++) {
+                const xDist = Math.abs(mx - pts[i].x);
                 if (xDist < minXDist) {
                     minXDist = xDist;
-                    nearestPtIdx = i;
+                    nearest = pts[i];
                 }
             }
 
             // Calcular a altura Y exata na curva da linha na coordenada mx
             let lineY = null;
-            if (mx <= points[0].x) {
-                lineY = points[0].y;
-            } else if (mx >= points[numPoints - 1].x) {
-                lineY = points[numPoints - 1].y;
+            if (mx <= first.x) {
+                lineY = first.y;
+            } else if (mx >= last.x) {
+                lineY = last.y;
             } else {
-                for (let i = 0; i < numPoints - 1; i++) {
-                    const p1 = points[i];
-                    const p2 = points[i + 1];
-                    if (p1 && p2 && !isNaN(p1.x) && !isNaN(p2.x) && mx >= p1.x && mx <= p2.x) {
+                for (let i = 0; i < pts.length - 1; i++) {
+                    const p1 = pts[i];
+                    const p2 = pts[i + 1];
+                    if (mx >= p1.x && mx <= p2.x) {
                         const span = p2.x - p1.x;
                         const r = span > 0 ? (mx - p1.x) / span : 0;
                         const smoothR = r * r * (3 - 2 * r);
@@ -603,12 +708,12 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
                 }
             }
 
-            if (lineY !== null && !isNaN(lineY)) {
+            if (lineY !== null && Number.isFinite(lineY)) {
                 const dist = Math.abs(my - lineY);
                 if (dist < minDistance) {
                     minDistance = dist;
                     bestDatasetIndex = dsIndex;
-                    bestPointIndex = nearestPtIdx;
+                    bestPointIndex = nearest.index;
                 }
             }
         }
@@ -622,13 +727,29 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
 
     // Aplica o estado de hover e atualiza cores e tooltip com altíssima fidelidade
     const setHoveredState = (chart, targetDatasetIndex, targetPointIndex, eventCoord = null) => {
-        if (!chart || chart._isAnimatingDraw) return;
+        if (!chart || chart._isAnimatingDraw || !isChartUsable(chart)) return;
 
         const datasetChanged = (currentHoveredDatasetIndex !== targetDatasetIndex);
+        const hoverKey = targetDatasetIndex + ':' + targetPointIndex;
+        const pointChanged = (lastHoverKey !== hoverKey);
         currentHoveredDatasetIndex = targetDatasetIndex;
+        lastHoverKey = hoverKey;
 
         const isHovering = targetDatasetIndex !== -1;
         const grey = '#d6d3d1';
+
+        // Nada mudou: evita reprocessar todo o gráfico a cada pixel do mouse.
+        // Só a posição do tooltip precisa acompanhar o cursor.
+        if (!datasetChanged && !pointChanged) {
+            if (isHovering && targetPointIndex !== -1 && eventCoord && chart.tooltip) {
+                chart.tooltip.setActiveElements(
+                    [{ datasetIndex: targetDatasetIndex, index: targetPointIndex }],
+                    eventCoord
+                );
+                chart.render();
+            }
+            return;
+        }
 
         if (datasetChanged) {
             const datasets = chart.data.datasets;
@@ -725,9 +846,12 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         const canvas = DOM.salesChart;
         if (!canvas) return;
 
-        canvas.addEventListener('mousemove', (e) => {
+        const applyHover = (e) => {
             const chart = state.salesChartInstance;
-            if (!chart || chart._isAnimatingDraw) return;
+            if (!isChartUsable(chart) || chart._isAnimatingDraw) {
+                canvas.style.cursor = 'default';
+                return;
+            }
 
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
@@ -736,11 +860,23 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
             const { datasetIndex, pointIndex } = getClosestDatasetAndPoint(chart, mx, my);
             canvas.style.cursor = datasetIndex !== -1 ? 'pointer' : 'default';
             setHoveredState(chart, datasetIndex, pointIndex, { x: mx, y: my });
+        };
+
+        // Agrupa movimentos em no máximo um tratamento por frame
+        canvas.addEventListener('mousemove', (e) => {
+            pendingMouseEvent = e;
+            if (hoverFrameId !== null) return;
+            hoverFrameId = requestAnimationFrame(() => {
+                hoverFrameId = null;
+                const evt = pendingMouseEvent;
+                pendingMouseEvent = null;
+                if (evt) applyHover(evt);
+            });
         });
 
         canvas.addEventListener('click', (e) => {
             const chart = state.salesChartInstance;
-            if (!chart) return;
+            if (!isChartUsable(chart)) return;
 
             // Se o usuário clicar enquanto a animação estiver rodando, finaliza na hora para abrir o modal
             if (chart._isAnimatingDraw) {
@@ -773,8 +909,8 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         });
 
         canvas.addEventListener('mouseleave', () => {
-            const canvas = DOM.salesChart;
-            if (canvas) canvas.style.cursor = 'default';
+            cancelPendingHover();
+            canvas.style.cursor = 'default';
             const chart = state.salesChartInstance;
             if (chart && !chart._isAnimatingDraw) {
                 setHoveredState(chart, -1, -1);
@@ -786,10 +922,13 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
 
     // Animação de desenho da linha com velocidade suave e cadenciada (4500ms)
     const runLineDrawAnimation = (chart, duration = 4500) => {
-        if (!chart) return;
+        if (!isChartUsable(chart)) return;
         if (chart._lineDrawAnim && chart._lineDrawAnim.rafId) {
             cancelAnimationFrame(chart._lineDrawAnim.rafId);
         }
+
+        cancelPendingHover();
+        if (DOM.salesChart) DOM.salesChart.style.cursor = 'default';
 
         chart._isAnimatingDraw = true;
         chart.lineDrawProgress = 0;
@@ -801,11 +940,17 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         chart._lineDrawAnim = animState;
 
         const tick = (now) => {
+            if (!isChartUsable(chart)) {
+                chart._isAnimatingDraw = false;
+                chart._lineDrawAnim = null;
+                return;
+            }
             const elapsed = now - startTime;
             const t = Math.min(elapsed / duration, 1);
             const eased = easeInOutCubic(t);
             chart.lineDrawProgress = eased;
-            chart.update('none');
+            // render() apenas redesenha: muito mais barato que update() por frame
+            chart.render();
             if (t < 1) {
                 animState.rafId = requestAnimationFrame(tick);
             } else {
@@ -1038,7 +1183,9 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
                     }
                 };
 
-                btn.onmouseenter = () => setHoveredState(chart, idx, -1);
+                btn.onmouseenter = () => {
+                    if (chart.isDatasetVisible(idx)) setHoveredState(chart, idx, -1);
+                };
                 btn.onmouseleave = () => setHoveredState(chart, -1, -1);
 
                 legendContainer.appendChild(btn);
@@ -1107,7 +1254,14 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
 
         const ctx = DOM.salesChart.getContext('2d');
         if (state.salesChartInstance) {
-            state.salesChartInstance.destroy();
+            const prev = state.salesChartInstance;
+            if (prev._lineDrawAnim && prev._lineDrawAnim.rafId) {
+                cancelAnimationFrame(prev._lineDrawAnim.rafId);
+            }
+            prev._lineDrawAnim = null;
+            prev._isAnimatingDraw = false;
+            prev.destroy();
+            state.salesChartInstance = null;
         }
 
         if (typeof Chart === 'undefined') {
@@ -1220,16 +1374,32 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
     const init = async () => {
         try {
             DOM.loadingStatus.textContent = 'Carregando dados...';
-            const response = await fetch('data/sales-data.csv');
-            if (!response.ok) throw new Error('Falha ao carregar o arquivo CSV de vendas');
+            let response;
+            try {
+                response = await fetch('data/sales-data.csv');
+            } catch (fetchErr) {
+                console.error('Falha de rede no fetch:', fetchErr);
+                throw new Error('Não foi possível carregar data/sales-data.csv. Se o dashboard foi aberto como arquivo local (file://), sirva-o por um servidor local (ex.: python3 -m http.server 8000) e acesse http://localhost:8000');
+            }
+            if (!response.ok) throw new Error(`Falha ao carregar o arquivo CSV de vendas (HTTP ${response.status})`);
             const rawCsvText = await response.text();
 
             DOM.loadingStatus.textContent = 'Processando métricas...';
-            const csvText = rawCsvText.replace(/^\uFEFF/, '');
+            const csvText = rawCsvText.charCodeAt(0) === 0xFEFF ? rawCsvText.slice(1) : rawCsvText;
             const lines = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
             if (lines.length < 2) throw new Error('CSV vazio ou sem registros válidos');
 
             const headers = parseCSVLine(lines[0]);
+
+            const missingInCsv = allStoreNames.filter((store) => !headers.includes(store));
+            const unknownInCsv = headers.filter((h) => h !== 'MES' && !allStoreNames.includes(h));
+            if (missingInCsv.length || unknownInCsv.length) {
+                console.warn('Colunas divergentes entre o CSV e a configuração:', {
+                    ausentesNoCsv: missingInCsv,
+                    desconhecidasNoCsv: unknownInCsv
+                });
+            }
+
             const dataRows = lines.slice(1);
             const parsed = new Array(dataRows.length);
 
@@ -1242,9 +1412,29 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
                 parsed[i] = row;
             }
 
-            state.allValidData = parsed.filter((row) => row.MES && row.MES.trim() !== '');
-            state.chartLabels = state.allValidData.map((row) => formatDateLabel(row.MES));
-            state.labelToIndex = new Map(state.chartLabels.map((label, idx) => [label, idx]));
+            const validRows = [];
+            const labels = [];
+            const seenLabels = new Set();
+            for (const row of parsed) {
+                if (!row.MES || row.MES.trim() === '') continue;
+                const label = formatDateLabel(row.MES);
+                if (label === '-') {
+                    console.warn(`Linha descartada (data inválida): ${row.MES}`);
+                    continue;
+                }
+                if (seenLabels.has(label)) {
+                    console.warn(`Linha descartada (mês duplicado): ${row.MES}`);
+                    continue;
+                }
+                seenLabels.add(label);
+                validRows.push(row);
+                labels.push(label);
+            }
+            if (!validRows.length) throw new Error('CSV vazio ou sem registros válidos');
+
+            state.allValidData = validRows;
+            state.chartLabels = labels;
+            state.labelToIndex = new Map(labels.map((label, idx) => [label, idx]));
 
             updateSummaryMetrics(state.allValidData);
 
