@@ -955,3 +955,381 @@ body {
         page-break-inside: avoid;
     }
 }
+
+/* ============================================
+   EXPORTAÇÃO DE LOJAS
+   ============================================ */
+
+.export-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: var(--stone-900);
+    border: 1px solid var(--stone-900);
+    border-radius: var(--radius-full);
+    color: var(--stone-50);
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    animation: badgeEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+    transition: transform var(--transition-fast), background-color var(--transition-fast),
+                border-color var(--transition-fast), box-shadow var(--transition-fast),
+                opacity var(--transition-fast);
+}
+
+.export-cta svg {
+    flex-shrink: 0;
+    transition: transform var(--transition-fast);
+}
+
+.export-cta:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: var(--stone-800);
+    border-color: var(--stone-800);
+    box-shadow: 0 6px 16px -4px rgba(28, 25, 23, 0.35);
+}
+
+.export-cta:hover:not(:disabled) svg {
+    transform: translateY(2px);
+}
+
+.export-cta:focus-visible {
+    outline: 2px solid var(--stone-900);
+    outline-offset: 3px;
+}
+
+.export-cta:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    animation: none;
+}
+
+/* Overlay */
+.export-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+}
+
+.export-backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-modal-backdrop);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.export-backdrop.fade-in {
+    animation: modalFadeIn 0.2s ease forwards;
+}
+
+.export-backdrop.fade-out {
+    animation: modalFadeOut 0.2s ease forwards;
+}
+
+.export-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.export-panel {
+    position: relative;
+    width: 100%;
+    max-width: 760px;
+    background: var(--bg-modal);
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    text-align: left;
+    opacity: 0;
+    transform: scale(0.95);
+    max-height: calc(100vh - 32px);
+    display: flex;
+    flex-direction: column;
+}
+
+.export-panel.bounce-in {
+    animation: editorialIn 0.25s ease forwards;
+}
+
+.export-panel.slide-down {
+    animation: editorialOut 0.2s ease forwards;
+}
+
+.export-head {
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--border-main);
+    flex-shrink: 0;
+}
+
+.export-eyebrow {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+}
+
+.export-head h2 {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.export-sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+    max-width: 52ch;
+}
+
+.export-list {
+    padding: 20px 28px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.export-empty {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    padding: 12px 0;
+}
+
+.export-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    background: var(--bg-kpi);
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-md);
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    transition: border-color var(--transition-fast), transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+}
+
+.export-row:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -8px rgba(28, 25, 23, 0.12);
+}
+
+.export-row-logo {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    background: #ffffff;
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    flex-shrink: 0;
+}
+
+.export-row-id {
+    min-width: 108px;
+    flex-shrink: 0;
+}
+
+.export-row-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.export-row-full {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.export-row-metrics {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.export-metric {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.export-metric-value {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.export-metric-label {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.export-row .achievement-badge {
+    margin-left: auto;
+}
+
+.export-row-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    background: var(--stone-900);
+    border: 1px solid var(--stone-900);
+    border-radius: var(--radius-full);
+    color: var(--stone-50);
+    font-family: var(--font-sans);
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform var(--transition-fast), background-color var(--transition-fast),
+                box-shadow var(--transition-fast);
+}
+
+.export-row-btn:hover {
+    transform: translateY(-1px);
+    background: var(--stone-800);
+    box-shadow: 0 6px 14px -6px rgba(28, 25, 23, 0.4);
+}
+
+.export-row-btn:active {
+    transform: translateY(0);
+}
+
+.export-row-btn:focus-visible,
+.export-all-btn:focus-visible {
+    outline: 2px solid var(--stone-900);
+    outline-offset: 3px;
+}
+
+.export-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px 28px;
+    border-top: 1px solid var(--border-main);
+    background: var(--bg-card-alt);
+    flex-shrink: 0;
+}
+
+.export-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex: 1;
+    min-width: 200px;
+    line-height: 1.45;
+}
+
+.export-status.is-success {
+    color: #4d6b3f;
+    font-weight: 600;
+}
+
+.export-status.is-error {
+    color: #a34848;
+    font-weight: 600;
+}
+
+.export-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--stone-900);
+    border-radius: var(--radius-full);
+    color: var(--stone-900);
+    font-family: var(--font-sans);
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color var(--transition-fast), color var(--transition-fast),
+                transform var(--transition-fast);
+}
+
+.export-all-btn:hover {
+    background: var(--stone-900);
+    color: var(--stone-50);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+    .export-head,
+    .export-list,
+    .export-footer {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .export-row {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .export-row-id {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .export-row-metrics {
+        order: 3;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .export-row .achievement-badge {
+        margin-left: 0;
+    }
+
+    .export-row-btn {
+        order: 4;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .export-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .export-all-btn {
+        justify-content: center;
+    }
+
+    .export-status {
+        min-width: 0;
+    }
+}

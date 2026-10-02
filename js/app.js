@@ -1,4 +1,11 @@
 import { STORE_CONFIG, allStoreNames } from './config.js';
+import {
+    setupExportPanel,
+    buildNarrative,
+    formatNumber,
+    numberFormatter,
+    decimalFormatter
+} from './export.js';
 
 (() => {
     'use strict';
@@ -54,7 +61,8 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         get modalFeedbackContainer() { return document.getElementById('modalFeedbackContainer'); },
         get modalFeedbackContent() { return document.getElementById('modalFeedbackContent'); },
         get modalStatusDot() { return document.getElementById('modalStatusDot'); },
-        get salesChart() { return document.getElementById('salesChart'); }
+        get salesChart() { return document.getElementById('salesChart'); },
+        get exportBtn() { return document.getElementById('exportBtn'); }
     };
 
     // Easing cúbico ultra-suave para desenho das linhas
@@ -62,20 +70,7 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
         return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     };
 
-    const numberFormatter = new Intl.NumberFormat('pt-BR', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    });
-    const decimalFormatter = new Intl.NumberFormat('pt-BR', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1
-    });
     const monthFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'short' });
-
-    const formatNumber = (num, decimals = 0) => {
-        if (num === null || isNaN(num)) return '-';
-        return (decimals === 0 ? numberFormatter : decimalFormatter).format(num);
-    };
 
     const formatDateLabel = (dateStr) => {
         if (!dateStr) return '-';
@@ -186,49 +181,6 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
             });
         });
         return Promise.all(promises);
-    };
-
-    const buildNarrative = (store, date, value, meta, achievement, delta) => {
-        const gap = meta - value;
-        const achStr = formatNumber(achievement, 1);
-        const deltaStr = formatNumber(delta, 1);
-        const absDeltaStr = formatNumber(Math.abs(delta), 1);
-
-        if (achievement >= 100) {
-            if (delta !== null && delta > 0) {
-                return `A unidade ${store} registrou desempenho positivo em ${date}, superando a meta estabelecida com ${value} vendas — ${achStr}% do objetivo. O crescimento de ${deltaStr}% em relação ao período anterior reforça a consistência da equipe e a eficácia das estratégias aplicadas. Recomenda-se manter o ritmo e aprimorar as práticas que conduziram a este resultado.`;
-            }
-            return `A unidade ${store} atingiu e superou a meta em ${date}, totalizando ${value} vendas — ${achStr}% do objetivo. Este resultado demonstra o comprometimento da equipe com os objetivos da rede. Parabenizamos toda a equipe e recomendamos manter a consistência operacional para os próximos períodos.`;
-        }
-
-        if (achievement >= 85) {
-            if (delta !== null && delta > 0) {
-                return `A unidade ${store} ficou próxima da meta em ${date}, com ${value} vendas realizadas (${achStr}% do objetivo) — um déficit de apenas ${gap} unidades. O crescimento de ${deltaStr}% frente ao período anterior demonstra evolução positiva e indica que a equipe está no caminho certo. Com pequenos ajustes operacionais e foco nas oportunidades de fechamento, o cumprimento integral da meta está ao alcance.`;
-            }
-            const retText = (delta !== null && delta < 0)
-                ? `A leve retração de ${absDeltaStr}% frente ao período anterior exige atenção. Recomenda-se `
-                : 'Recomenda-se ';
-            return `A unidade ${store} apresentou resultado próximo da meta em ${date}, com ${value} vendas realizadas (${achStr}% do objetivo). ${retText}identificar os fatores que impediram o atingimento pleno e adotar ações corretivas para garantir o cumprimento da meta nos próximos períodos.`;
-        }
-
-        if (achievement >= 60) {
-            if (delta !== null && delta > 0) {
-                return `A unidade ${store} encerrou ${date} com ${value} vendas — atingimento de ${achStr}% da meta de ${meta} unidades. Apesar da evolução positiva de ${deltaStr}% frente ao período anterior, o resultado ainda está aquém do objetivo. O déficit de ${gap} vendas exige ação estruturada, com metas intermediárias semanais e acompanhamento próximo dos indicadores.`;
-            }
-            const retText = (delta !== null && delta < 0)
-                ? `— com retração de ${absDeltaStr}% frente ao período anterior — `
-                : '';
-            return `A unidade ${store} encerrou ${date} com ${value} vendas realizadas, representando ${achStr}% da meta de ${meta} unidades. Este desempenho abaixo do esperado ${retText}exige levantamento das causas, revisão das abordagens comerciais e implementação de plano de ação estruturado com indicadores claros de acompanhamento.`;
-        }
-
-        if (delta !== null && delta > 0) {
-            return `A unidade ${store} registrou em ${date} um total de ${value} vendas — atingimento de ${achStr}% da meta de ${meta} unidades. Embora a evolução de ${deltaStr}% frente ao período anterior sinalize melhora no ritmo, o resultado absoluto ainda é crítico. O déficit de ${gap} vendas é expressivo e requer intervenção estratégica, diagnóstico preciso dos gargalos operacionais e plano de recuperação com metas semanais monitoradas.`;
-        }
-
-        const retText = (delta !== null && delta < 0)
-            ? `A retração de ${absDeltaStr}% em relação ao período anterior agrava ainda mais o cenário. `
-            : '';
-        return `A unidade ${store} encerrou ${date} com apenas ${value} vendas realizadas — atingimento de ${achStr}% da meta de ${meta} unidades — configurando um resultado crítico. ${retText}Esta situação exige diagnóstico aprofundado e imediato, seguido de implementação urgente de plano de recuperação com metas intermediárias claras, acompanhamento diário e envolvimento direto da liderança para reverter a trajetória.`;
     };
 
     const findPrevValue = (store, currentIdx) => {
@@ -1438,6 +1390,8 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
 
             updateSummaryMetrics(state.allValidData);
 
+            if (DOM.exportBtn) DOM.exportBtn.disabled = false;
+
             DOM.loadingStatus.textContent = 'Carregando logos...';
             await preloadLogos();
 
@@ -1453,6 +1407,9 @@ import { STORE_CONFIG, allStoreNames } from './config.js';
 
     document.addEventListener('DOMContentLoaded', () => {
         setupModalListeners();
+        setupExportPanel({
+            getData: () => ({ data: state.allValidData, labels: state.chartLabels })
+        });
         init();
     });
 })();
